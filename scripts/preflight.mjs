@@ -1,39 +1,40 @@
 #!/usr/bin/env node
 /**
- * 重启前自检 / 发布前自检。
+ * 发布前 / 重启前自检。
  *
- * 模拟 DSH 启动时会做的事，逐项断言；任何一项 ❌ 就先别重启。
- *
- *   node scripts/preflight.mjs            # 自检本机开发环境
+ *   node scripts/preflight.mjs          # 本机开发（额外检查 profile 的 patch.yml）
+ *   node scripts/preflight.mjs --ci     # CI 模式（不依赖本机 profile，只查包本身）
  *   node scripts/preflight.mjs --profile web
  *
- * 检查内容：
- *   1. 关键文件是否齐全
- *   2. package.json 合法、name 正确
- *   3. cordis.patch.yml 里 insert 的 id 与包名一致（最关键的一条）
- *   4. profile 的 package.json 合法
- *   5. 宿主插件 import + apply（路由数、工具数）
- *   6. 客户端 bundle 被求值两次不炸、只注册一次、注册 id 正确、能注册主面板
+ * 任何一项 ❌ 就别发布 / 别重启。
+ *
+ * 检查项：
+ *   1. 关键文件
+ *   2. package.json + dsh.bundle.patch 契约（patch 存在、files 含它、insert name === 包名）
+ *   3. 生产代码里没有调试探针
+ *   4. 配置文件无 BOM、可解析
+ *   5. 宿主插件 import + apply（路由/工具/契约）
+ *   6. 客户端 bundle 求值两次不炸、只注册一次、id 正确、能注册主面板
+ *   7. npm pack --dry-run：必含文件在、私有文件不在
+ *   8. （仅本地）profile 的 patch.yml 与本插件 insert 一致
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 
-/* ── 定位 ─────────────────────────────────────────────── */
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PLUGIN_DIR = resolve(SCRIPT_DIR, '..');
+const CI = process.argv.includes('--ci');
 
 function argValue(flag, fallback) {
   const i = process.argv.indexOf(flag);
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
-
 const PROFILE_NAME = argValue('--profile', 'desktop');
 const DSH_HOME = process.env.DSH_HOME || join(homedir(), '.dsh');
 const PROFILE_DIR = process.env.DSH_PROFILE_DIR || join(DSH_HOME, 'profiles', PROFILE_NAME);
-const PATCH_YML = join(PROFILE_DIR, 'cordis.patch.yml');
-const PROFILE_PKG = join(PROFILE_DIR, 'package.json');
 
 let fail = 0;
 const ok = (b) => (b ? '✅' : '❌');
@@ -43,60 +44,68 @@ const check = (label, cond, extra) => {
 };
 const section = (t) => console.log('\n== ' + t + ' ==');
 
-console.log('插件目录 : ' + PLUGIN_DIR);
-console.log('profile  : ' + PROFILE_DIR);
+console.log('模式    : ' + (CI ? 'CI（跳过本机 profile）' : '本地开发'));
+console.log('插件目录: ' + PLUGIN_DIR);
+if (!CI) console.log('profile : ' + PROFILE_DIR);
 
-/* ── 1. 关键文件 ─────────────────────────────────────── */
+/* ── 1. 关键文件 ── */
 section('1. 关键文件');
-for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'package.json', 'lib/paper.js']) {
+for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'package.json', 'cordis.patch.yml']) {
   check(f, existsSync(join(PLUGIN_DIR, f)));
 }
 
-/* ── 2. package.json ────────────────────────────────── */
-section('2. package.json');
+/* ── 2. package.json 与 bundle patch 契约 ── */
+section('2. package.json / bundle patch');
 let pkg = null;
 try {
   pkg = JSON.parse(readFileSync(join(PLUGIN_DIR, 'package.json'), 'utf8'));
   check('JSON 合法', true);
   check('name 非空', typeof pkg.name === 'string' && pkg.name.length > 0, '(' + pkg.name + ')');
   check('dsh.client 已声明', !!(pkg.dsh && pkg.dsh.client), JSON.stringify(pkg.dsh && pkg.dsh.client));
+  const patchRel = pkg.dsh && pkg.dsh.bundle && pkg.dsh.bundle.patch;
+  check('声明 dsh.bundle.patch', !!patchRel, patchRel || '缺失（npm 装完不会挂载宿主插件）');
+  if (patchRel) {
+    const rel = String(patchRel).replace(/^\.\//, '');
+    const patchPath = join(PLUGIN_DIR, rel);
+    check('bundle.patch 指向真实文件', existsSync(patchPath), rel);
+    check('files 包含该 patch', (pkg.files || []).some((f) => String(f).replace(/^\.\//, '') === rel), rel);
+    if (existsSync(patchPath)) {
+      const y = readFileSync(patchPath, 'utf8');
+      const names = [...y.matchAll(/^\s*name:\s*([^\s#]+)/gm)].map((m) => m[1].replace(/^["']|["']$/g, ''));
+      check('patch 的 name === 包名', names.length === 1 && names[0] === pkg.name, names.join(','));
+    }
+  }
 } catch (e) {
   check('JSON 合法', false, String(e.message).slice(0, 120));
 }
 
-/* ── 3. patch.yml ───────────────────────────────────── */
-section('3. cordis.patch.yml');
-let yml = '';
-try {
-  yml = readFileSync(PATCH_YML, 'utf8');
-  check('可读', true);
-} catch (e) {
-  check('可读', false, String(e.message).slice(0, 120));
-}
-if (yml) {
-  const rows = [...yml.matchAll(/-\s*id:\s*([^\s]+)[\s\S]*?name:\s*([^\n]+)/g)]
-    .map((m) => ({ id: m[1], name: m[2].trim().replace(/^["']|["']$/g, '') }))
-    .filter((r) => resolve(r.name) === resolve(join(PLUGIN_DIR, 'lib', 'index.js')) || /ai-library/.test(r.id));
-  check('找到本插件的 insert', rows.length >= 1, rows.length + ' 条');
-  const row = rows[0] || {};
-  /* 核心规则：插入 id 必须等于包名，否则客户端 bundle 永远拿不到 */
-  check('insert id === package name', !!pkg && row.id === pkg.name, row.id + ' vs ' + (pkg && pkg.name));
-  check('insert name 指向真实文件', !!row.name && existsSync(row.name), row.name || '');
-  check('没有重复 insert', rows.length <= 1, '实际 ' + rows.length);
+/* ── 3. 生产代码纯净度 ── */
+section('3. 生产代码纯净度');
+const clientSrc = existsSync(join(PLUGIN_DIR, 'lib/client.js')) ? readFileSync(join(PLUGIN_DIR, 'lib/client.js'), 'utf8') : '';
+const indexSrc = existsSync(join(PLUGIN_DIR, 'lib/index.js')) ? readFileSync(join(PLUGIN_DIR, 'lib/index.js'), 'utf8') : '';
+const toolsSrc = existsSync(join(PLUGIN_DIR, 'lib/tools.js')) ? readFileSync(join(PLUGIN_DIR, 'lib/tools.js'), 'utf8') : '';
+const allSrc = clientSrc + indexSrc + toolsSrc;
+for (const m of ['pet-probe', 'probePetWidget', 'bf-widget']) {
+  check('无调试探针 "' + m + '"', !allSrc.includes(m));
 }
 
-/* ── 4. profile package.json ────────────────────────── */
-section('4. profile/package.json');
-try {
-  const p = JSON.parse(readFileSync(PROFILE_PKG, 'utf8'));
-  check('JSON 合法', true);
-  const bundles = (p.dsh && p.dsh.profile && p.dsh.profile.bundles) || [];
-  check('bundles 是数组', Array.isArray(bundles), bundles.length + ' 项');
-} catch (e) {
-  check('JSON 合法', false, String(e.message).slice(0, 120));
+/* ── 4. 配置文件 ── */
+section('4. 配置文件');
+for (const f of ['config.example.json', 'package.json']) {
+  const p = join(PLUGIN_DIR, f);
+  if (!existsSync(p)) continue;
+  const buf = readFileSync(p);
+  const hasBom = buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf;
+  check(f + ' 无 BOM', !hasBom);
+  try {
+    JSON.parse(buf.toString('utf8').replace(/^\uFEFF/, ''));
+    check(f + ' 可解析', true);
+  } catch (e) {
+    check(f + ' 可解析', false, String(e.message).slice(0, 80));
+  }
 }
 
-/* ── 5. 宿主插件 ───────────────────────────────────── */
+/* ── 5. 宿主插件 ── */
 section('5. 宿主插件');
 const routes = [];
 const tools = new Map();
@@ -126,9 +135,8 @@ try {
   check('import + apply', false, String(e.message).slice(0, 200));
 }
 
-/* ── 6. 客户端 bundle：模拟求值两次 ─────────────────── */
+/* ── 6. 客户端 bundle ── */
 section('6. 客户端 bundle（求值两次不炸）');
-const src = readFileSync(join(PLUGIN_DIR, 'lib', 'client.js'), 'utf8');
 const loads = [];
 const fakeEl = () => ({
   style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, appendChild() {}, removeChild() {},
@@ -154,7 +162,7 @@ globalThis.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve
 
 let threw = null;
 try {
-  const run = new Function('window', 'document', 'localStorage', 'fetch', src);
+  const run = new Function('window', 'document', 'localStorage', 'fetch', clientSrc);
   run(globalThis.window, globalThis.document, globalThis.localStorage, globalThis.fetch);
   run(globalThis.window, globalThis.document, globalThis.localStorage, globalThis.fetch);
 } catch (e) {
@@ -190,5 +198,56 @@ if (loads[0] && typeof loads[0].factory === 'function') {
   }
 }
 
-console.log('\n' + (fail === 0 ? '🟢 全部通过，可以重启' : '🔴 有 ' + fail + ' 项没通过，先别重启'));
+/* ── 7. 打包清单 ── */
+section('7. 打包清单（npm pack --dry-run）');
+try {
+  const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  const out = execFileSync(process.execPath, [npmCli, 'pack', '--dry-run', '--json', '--ignore-scripts'], {
+    cwd: PLUGIN_DIR,
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  const json = JSON.parse(out.slice(out.indexOf('[')));
+  const files = json[0].files.map((f) => f.path);
+  console.log('  文件数 ' + files.length + ' | ' + (json[0].size / 1048576).toFixed(2) + ' MB');
+  for (const must of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/paper.js', 'cordis.patch.yml', 'package.json', 'README.md', 'config.example.json']) {
+    check('tarball 含 ' + must, files.includes(must));
+  }
+  const banned = files.filter((f) => /^(items\/|\.cache\/|config\.json$|user-items\.json$|library\.js$|.*-items\.js$|\.probe-|\.blk|node_modules\/)/.test(f));
+  check('tarball 不含私有/草稿文件', banned.length === 0, banned.slice(0, 4).join(', '));
+} catch (e) {
+  check('npm pack 可执行', false, String(e.message).split('\n')[0].slice(0, 120));
+}
+
+/* ── 8. 本机 profile（CI 跳过）── */
+if (!CI) {
+  section('8. 本机 profile');
+  const PATCH_YML = join(PROFILE_DIR, 'cordis.patch.yml');
+  const PROFILE_PKG = join(PROFILE_DIR, 'package.json');
+  let yml = '';
+  try {
+    yml = readFileSync(PATCH_YML, 'utf8');
+    check('patch.yml 可读', true);
+  } catch (e) {
+    check('patch.yml 可读', false, String(e.message).slice(0, 100));
+  }
+  if (yml) {
+    const rows = [...yml.matchAll(/-\s*id:\s*([^\s]+)[\s\S]*?name:\s*([^\n]+)/g)]
+      .map((m) => ({ id: m[1], name: m[2].trim().replace(/^["']|["']$/g, '') }))
+      .filter((r) => resolve(r.name) === resolve(join(PLUGIN_DIR, 'lib', 'index.js')) || /ai-library/.test(r.id));
+    check('找到本插件 insert', rows.length >= 1, rows.length + ' 条');
+    check('没有重复 insert', rows.length <= 1, '实际 ' + rows.length);
+    const row = rows[0] || {};
+    check('insert 指向本插件', !!pkg && (row.name === pkg.name || resolve(row.name).startsWith(resolve(PLUGIN_DIR))), row.name || '');
+  }
+  try {
+    const p = JSON.parse(readFileSync(PROFILE_PKG, 'utf8'));
+    const bundles = (p.dsh && p.dsh.profile && p.dsh.profile.bundles) || [];
+    check('profile package.json 合法', true, bundles.length + ' bundles');
+  } catch (e) {
+    check('profile package.json 合法', false, String(e.message).slice(0, 100));
+  }
+}
+
+console.log('\n' + (fail === 0 ? '🟢 全部通过' : '🔴 有 ' + fail + ' 项没通过，先别发布/重启'));
 process.exit(fail === 0 ? 0 : 1);

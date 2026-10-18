@@ -30,6 +30,9 @@
   "dsh": {
     "client": {
       "platform": "web"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
     }
   },
   "files": [
@@ -42,7 +45,8 @@
     "INTEGRATION.md",
     "PRODUCT.md",
     "ECOSYSTEM.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "cordis.patch.yml"
   ],
   "engines": {
     "node": ">=20"

@@ -1,0 +1,6 @@
+# dsh-ai-library bundle patch：只插入一条 loader entry。
+# name 必须是实际包名 —— cordis 按 name 解析包；客户端 bundle 也按包名取，
+# 所以 package.json 的 name、这里的 name、client.js 里 __ModuleLoader__ 的 id 三者必须一致。
+- insert:
+    - id: dsh-ai-library
+      name: dsh-ai-library

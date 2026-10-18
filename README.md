@@ -13,67 +13,63 @@
 
 ## 安装
 
+三种方式，选一种（装完**重启 DSH**）：
+
 ```bash
-# 方式一：npm
+# ① npm（推荐）
 dsh plugin --profile desktop add dsh-ai-library
 
-# 方式二：从源码
-git clone https://github.com/Instant-KING/dsh-ai-library.git
-# 然后在 profile 的 cordis.patch.yml 里 insert 绝对路径
+# ② 直接从 GitHub
+dsh plugin --profile desktop add github:Instant-KING/dsh-ai-library
+
+# ③ 本地目录（开发用，不装包）
+# clone 后在 profile 的 cordis.patch.yml 里用绝对路径 insert：
+#   - insert:
+#       - id: dsh-ai-library
+#         name: E:/path/to/dsh-ai-library/lib/index.js
 ```
 
-## 从源码开发
-
-### 方式一：npm
-
-```bash
-dsh plugin --profile desktop add dsh-ai-library
-```
-
-### 方式二：从 GitHub
-
-```bash
-dsh plugin --profile desktop add github:your-name/dsh-ai-library
-```
-
-### 方式三：本地目录（开发用）
-
-在 profile 的 `cordis.patch.yml` 里用绝对路径 insert，免安装：
-
-```yaml
-- insert:
-    - id: ai-library
-      name: E:/path/to/dsh-ai-library/lib/index.js
-```
-
-三种方式选一种即可。装完**重启 DSH**。
-
----
+装完第一次打开面板会自动建空库；把文件丢进 `~/ai-library/items/` 就能看到。
 
 ## 配置
 
-插件目录下的 `config.json`（可不建，不建就用默认值）。参考 [config.example.json](config.example.json)。
+插件目录下的 `config.json`（可不建，全部字段都有默认值）。参考 [config.example.json](config.example.json)。
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `root` | `~/ai-library` | 数据根目录，其余路径都从它推出来 |
+| `root` | `~/ai-library` | 数据根目录，其余路径从它推出 |
 | `libraryFile` | `<root>/library.js` | 手写条目 |
-| `projectFile` | `<root>/project-items.js` | 批量导入的条目（可选） |
+| `projectFile` | `<root>/project-items.js` | 批量导入条目（可选） |
 | `marketFile` | `<root>/market-items.js` | 市场同步产物（可选） |
 | `githubFile` | `<root>/github-items.js` | GitHub 项目同步产物（可选） |
-| `userItemsFile` | `<root>/user-items.json` | **编辑器写入**的条目 |
+| `userItemsFile` | `<root>/user-items.json` | 面板编辑器写入的条目 |
 | `itemsDir` | `<root>/items` | 文件根目录（只允许读这里） |
 | `cacheDir` | `<root>/.cache` | 缓存 |
-| `motionDir` | 空（关闭） | 可选的外部只读挂载源 |
-| `soffice` | 自动探测 | LibreOffice 可执行文件 |
+| `translateCache` | `<cache>/translate` | 翻译产物 |
+| `marketCache` | `<cache>/market.json` | 市场原始目录缓存 |
+| `vendorDir` | `<插件>/vendor` | 内置 pdf.js / three.js |
+| `soffice` | 自动探测 | LibreOffice 可执行文件（Office 转 PDF） |
+| `motionDir` | 空（关闭） | 外部只读挂载的提示词库 |
 | `translateUrl` | `http://127.0.0.1:11008` | PDFMathTranslate 服务 |
-| `marketEnabled` | `false` | 是否允许同步插件市场 |
+| `workspaceDir` | 空 | 自动入库扫描的根目录 |
+| `watchDirs` | `[]` | 自动入库监听的目录 |
+| `autoCaptureOnBoot` | `false` | 启动后自动扫一次 watchDirs |
+| `autoCaptureProject` | `自动入库` | 自动入库的分组名 |
+| `autoCaptureDepth` | `2` | 自动入库递归深度 |
+| `toolsEnabled` | `true` | 是否注册 14 个 AI 工具 |
+| `marketUrl` | `https://api.dshmk.com/` | 插件市场源 |
+| `marketEnabled` | `false` | 是否自动同步市场（默认关，开了启动后自动拉） |
+| `marketLimit` | `300` | 市场最多收录条数 |
+| `marketTtlMs` | 6 小时 | 市场缓存有效期 |
+| `paperKeys` | `{}` | `{ ieee, elsevier, springer }`，论文检索用 |
 
-也可以用环境变量覆盖：`AILIB_ROOT`、`AILIB_MOTION_DIR`、`SOFFICE`、`PDFMATHTRANSLATE_URL`。
+环境变量（优先级高于 config.json）：
 
-> 优先级：**环境变量 > config.json > 默认值**
+```
+AILIB_ROOT  AILIB_MOTION_DIR  AILIB_WORKSPACE  SOFFICE  PDFMATHTRANSLATE_URL
+```
 
----
+> 论文检索已内置（`lib/paper.js`，纯 Node），**不需要 Python**，也不需要外部项目。
 
 ## 数据格式
 
@@ -138,52 +134,48 @@ window.LIBRARY = {
 
 ## 给 AI 的工具
 
-资料馆不只是一个面板，它还把这套能力**注册成工具**，AI 可以直接调用（不需要你去翻文件）。
+资料馆把这些能力**注册成工具**，AI 可以直接调用（不用翻文件）。共 14 个：
 
 | 工具 | 类型 | 作用 |
 |---|---|---|
-| `library_search` | 只读 | 搜条目。`mode: "meta"` 搜标题/摘要/标签/备注；`mode: "fulltext"` **深入文件内容**（md/txt/pdf），返回命中片段 |
+| `library_search` | 只读 | 搜条目。`meta` 搜标题/摘要/标签/备注；`fulltext` 深入文件内容（md/代码/PDF），返回命中片段；支持 `group` 限定 |
 | `library_get` | 只读 | 取一条的完整信息 + 文件是否存在 |
-| `library_read` | 只读 | 抽文本：md/txt 直读，PDF 用自带 pdf.js 抽（可按页） |
+| `library_read` | 只读 | 抽文本：md/txt 直读，PDF 用自带 pdf.js（可按页） |
 | `library_stats` | 只读 | 按类型/分组统计、有文件数、文本缓存状态 |
-| `library_add` | 写入 | 新建条目（写 `user-items.json`） |
+| `library_add` | 写入 | 新建条目（只写 `user-items.json`） |
 | `library_update` | 写入 | 改字段（手写条目也能改，存为覆盖副本） |
-| `library_save_url` | 写入 | 抓网页 → 存本地 md 快照 → 建条目（可在面板里打开） |
-| `library_translate` | 长任务 | 提交 PDF 给 PDFMathTranslate，**立刻返回 jobId** |
+| `library_save_url` | 写入 | 抓网页 → 存本地 md 快照 → 建条目 |
+| `library_import` | 写入 | 把目录里的产物（pptx/docx/pdf/md/png/mp4…）批量入馆 |
+| `library_autocapture` | 写入 | 增量入库：只收上次扫描后新增/变化的文件 |
+| `library_repo_build` | 写入 | 从仓库建库：clone GitHub 或扫本地目录，README + docs 建条目 |
+| `library_paper_search` | 检索 | 十源论文检索（内置实现，无需 Python） |
+| `library_paper_add` | 写入 | 把检索结果存成 `kind: paper` 条目 |
+| `library_translate` | 长任务 | 提交 PDF 给 PDFMathTranslate，立刻返回 jobId |
 | `library_job` | 长任务 | 查任务进度 / 产物 |
-
-设计原则：
-
-- **写入只碰 `user-items.json`**，`library.js` 永远是只读
-- **全文抽取带磁盘缓存**（`.cache/text/`），按 `mtime + size` 失效，同一文件只解析一次
-- **长任务不阻塞**：翻译这类几十秒到几分钟的活返回 jobId，之后轮询
-- 面板每 4 秒比对一次数据指纹（`rev`），**工具写完自动刷新**，不用手动点
-
-调用示例：
-
-```
-library_search({ q: "碰撞隧穿", mode: "fulltext" })
-library_read({ id: "paper-xxx", page: 3 })
-library_save_url({ url: "https://example.com/article", group: "参考网站" })
-library_translate({ id: "paper-xxx" })   → { jobId: "tr-xxx" }
-library_job({ jobId: "tr-xxx" })         → { status: "running" | "done" }
-```
-
----
 
 ## 路由
 
+宿主注册的全部 HTTP 路由（前缀 `/api/ai-library`）：
+
 | 路由 | 方法 | 作用 |
 |---|---|---|
-| `/api/ai-library` | GET | 合并后的全部条目 |
-| `/api/ai-library/file` | GET | 取 items/ 文件（md 渲染 / Office 转 PDF / 支持 Range） |
-| `/api/ai-library/item` | POST/PATCH/DELETE | 条目增改删（写 user-items.json） |
-| `/api/ai-library/vendor` | GET | 插件自带的 pdf.js 资源 |
-| `/api/ai-library/translate` | GET/POST | 代理 PDFMathTranslate |
-| `/api/ai-library/market` | GET/POST | 插件市场同步 |
-| `/api/ai-library/motion` | GET | 外部只读挂载源的资源 |
-
----
+| `/api/ai-library` | GET | 全量条目 + 大类 + 分组表 |
+| `/file` | GET | 取 `items/` 下的文件（`?name=`） |
+| `/vendor` | GET | 内置 pdf.js / three.js |
+| `/log` | POST | 渲染进程错误上报 |
+| `/item` | POST/PATCH/DELETE | 条目增改删 |
+| `/bucket` | POST/PATCH/DELETE | 大类增改删 |
+| `/install` | POST | 一键安装插件（`dsh plugin add`） |
+| `/repo` | GET | GitHub 仓库元信息 |
+| `/compat` | GET | 包与当前 DSH 的兼容性 |
+| `/og` | GET | GitHub 社交预览图（代理） |
+| `/avatar` | GET | GitHub 头像（代理） |
+| `/archive` | GET | 压缩包内容列表 |
+| `/paper` | GET | 论文检索（十源，内置） |
+| `/keys` | GET/POST | 论文平台 key 配置 |
+| `/translate` | GET/POST | PDFMathTranslate 代理 |
+| `/market` | POST | 同步插件市场 |
+| `/motion` | GET | 外部提示词库资源 |
 
 ## 可选环境
 
