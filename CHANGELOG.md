@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.23 — 2026-10-18
+
+### 修复
+
+- **更新失败：spawn EINVAL**：Windows 上 `execFile` 直接跑 `.cmd/.bat` 会被 Node ≥20 拒绝。
+  新增 `execCli()`：`.exe` 直跑，`.cmd/.bat` 或无扩展名统一经 `cmd.exe /d /s /c`，并做参数转义。
+  `/install`、`/update` 全部改用它；`deriveDshCli()` 增加多个候选路径（含 `~/.local/bin/dsh.cmd`）。
+- **安装按钮像没反应**：Electron 环境下 `window.confirm/alert` 可能被静默禁用。
+  改为面板内确认弹窗 + 底部轻提示（`askConfirm` / `notify`），14 处 alert、3 处 confirm 全部替换。
+
 ## 0.3.22 — 2026-10-18
 
 ### 主题
