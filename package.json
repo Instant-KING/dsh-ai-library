@@ -1,6 +1,6 @@
 {
   "name": "dsh-ai-library",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "资料馆：把本地多源资料库渲染成 DeepSeek Harness 原生面板。内置 11 种预览器（pdf.js / 代码高亮 / 3D / 表格 / 字体 / 压缩包 / 音频…）、论文多平台检索、GitHub 仓库卡与一键安装。",
   "type": "module",
   "license": "MIT",
