@@ -33,7 +33,7 @@
 
 | id | 插件 | 探测位置 | 能力 |
 |---|---|---|---|
-| `meme` | dsh-meme（表情包） | `~/.dsh/dsh-expression.json` 的 `packsDir`、`~/.dsh/whale-bubble-imgs` | 只读 + 计划导出/安装/共享 |
+| `meme` | dsh-meme（表情包） | `~/.dsh/meme-packs`（用户包）、`<插件>/memes`（内置包）、`~/.dsh/dsh-expression.json` | **已实现：列表 / 启用 / 停用 / 导入 / 删除 / 图片预览** |
 | `pet` | dsh-bigfish（桌宠） | `~/.dsh/whale-roles`（`.dshpet` 角色包） | 只读 + 计划导出/安装/共享 |
 | `skin` | dsh-dream-skin（皮肤） | `~/.dsh/storages/dsh-dream-skin`、`~/.dsh/dsh-dream-skin.json` | 只读 + 计划导出 |
 | `persona` | dsh-persona-dafeiyu（人设） | `~/.dsh/storages/dsh-persona-dafeiyu/personas.json` | 只读 + 计划导出 |
@@ -81,6 +81,20 @@ globalThis.__AILIB_ADAPTERS__.collect()   // 查当前汇总
   }
 }
 ```
+
+### 表情包图集（已实现）
+
+```
+GET  /api/ai-library/meme?action=list            列出图集（内置 + 用户）
+GET  /api/ai-library/meme?action=images&id=xxx   列出图片（读 index.db）
+GET  /api/ai-library/meme?action=image&id=xxx&path=memes/happy/a.png   代理图片
+POST /api/ai-library/meme?action=enable          { id, mode: solo|add|remove } → 写 enabledPacks
+POST /api/ai-library/meme?action=import          { path }  导入解压好的图集目录（需含 index.db）
+POST /api/ai-library/meme?action=remove          { id }    只删用户包
+```
+
+面板：左侧「表情包图集」大类 → 选图集 → 主区显示封面/张数/图片网格；
+按钮「启用这个图集」= 写 `~/.dsh/dsh-expression.json` 的 `enabledPacks`，表情包插件立即生效。
 
 ## 5. 设计约束
 

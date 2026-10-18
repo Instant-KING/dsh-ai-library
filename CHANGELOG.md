@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.3.32 — 2026-10-18
+
+### 新增：表情包图集管理（dsh-meme 联动）
+
+- 新增 `lib/meme-packs.js`：读 `~/.dsh/meme-packs` + 插件内置 `memes/`，用 `node:sqlite` 读 `index.db` 的张数与封面
+- 新路由 `/api/ai-library/meme`：list / images / image / enable / import / remove
+- 左侧新增「表情包图集」大类（排在插件市场、本地对话产物之后）
+- 主区 MemePanel：封面、张数、版本、图片网格；「启用这个图集」写 `enabledPacks`，表情包插件立即生效
+- 导入：填解压目录路径（含 index.db）→ 复制进 `~/.dsh/meme-packs/<id>`；删除只允许用户包，路径校验防越界
+- 实测：内置包 24 张 / images 正常 / 越界读取 404 / enable 写入设置 / remove 成功
+
 ## 0.3.31 — 2026-10-18
 
 ### 新增：插件联动适配器（预留开放接口）

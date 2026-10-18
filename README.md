@@ -135,6 +135,15 @@ DSH 主题变量 --dsw-alias-brand-primary / --dsw-static-deepseek-500（DSH 若
 
 按钮尺寸、圆角、动效都不变，只换主色；极光背景的主色也会跟着变。
 
+## 表情包图集（与 dsh-meme 联动）
+
+左侧「表情包图集」直接列出 dsh-meme 的图集（内置包 + `~/.dsh/meme-packs` 下你导入的）：
+
+- 选一个图集 → 主区显示封面、张数、图片网格
+- 点「启用这个图集」→ 写 `~/.dsh/dsh-expression.json` 的 `enabledPacks`，表情包插件**立即生效**
+- 「导入图集…」填一个**解压好的目录路径**（需含 `index.db`），会复制进 `~/.dsh/meme-packs/<id>`
+- 「删除」只删用户导入的包，内置包删不掉
+
 ## 数据格式
 
 `library.js` 是普通 JS：
