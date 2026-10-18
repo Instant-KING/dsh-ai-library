@@ -1,5 +1,14 @@
 # 更新日志
 
+## 0.3.14 — 2026-10-18
+
+### 文档
+
+- README 新增「论文检索需要配哪些 key」：四个可选平台（Sciverse / IEEE / Elsevier / Springer）+ AnySearch 的申请地址、配置项、两种填法，并说明**语义检索（RAG）必须配 sciverse**
+- `config.example.json` 的 `_keysNote` 写清每个 key 的来源
+- `INTEGRATION.md` 路由表补充 `mode=semantic` 与 `/paper/read`
+- 面板「配置 key」输入框的占位符改为提示申请地址（sciverse 标注「语义检索必填」）
+
 ## 0.3.13 — 2026-10-18
 
 ### 新增

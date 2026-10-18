@@ -38,6 +38,38 @@ dsh plugin --profile desktop add github:Instant-KING/dsh-ai-library
 
 装完第一次打开面板会自动建空库；把文件丢进 `<下载目录>/ai-library/items/` 就能看到。
 
+## 论文检索需要配哪些 key
+
+十个学术源（arXiv / OpenAlex / Crossref / DOAJ / Europe PMC / INSPIRE / Zenodo / HAL / DataCite / OpenAIRE）**免 key 直接用**。
+下面几个是可选的付费/受限源，**不配只是查不到它的结果**，不会报错：
+
+| 平台 | 配置项 | 去哪申请 | 用途 |
+|---|---|---|---|
+| **Sciverse** | `paperKeys.sciverse`（`sv-` 开头） | <https://sciverse.space/> → 开发者控制台 | 元数据 + **语义检索(RAG)** + 读原文 |
+| IEEE Xplore | `paperKeys.ieee` | <https://developer.ieee.org/> | IEEE 论文 |
+| ScienceDirect | `paperKeys.elsevier` | <https://dev.elsevier.com/> | Elsevier 期刊 |
+| Springer | `paperKeys.springer` | <https://dev.springernature.com/> | Springer 论文 |
+| AnySearch（可选） | `paperKeys.anysearch` | <https://www.anysearch.com/console/api-keys> | 网页检索；**留空也能用**（匿名免费配额） |
+
+**两种填法（任选）**
+
+1. 面板里填：工具栏「论文检索」→ 右上角「配置 key」→ 粘贴 → 保存（立即生效，不用重启）
+2. 改文件：插件目录 `config.json`
+
+```json
+{
+  "paperKeys": {
+    "sciverse": "sv-你的token",
+    "ieee": "",
+    "elsevier": "",
+    "springer": "",
+    "anysearch": ""
+  }
+}
+```
+
+> ⚠️ **语义检索（RAG）只支持 Sciverse**：没配 `sciverse` 时面板提示「需要 sciverse key」，
+> 接口返回 400 并说明原因，不会静默失败。
 ## 配置
 
 插件目录下的 `config.json`（可不建，全部字段都有默认值）。参考 [config.example.json](config.example.json)。

@@ -108,7 +108,8 @@ sim    仿真      courseware 课件  report 报告       note 笔记
 | `/api/ai-library/og` | GET | GitHub 预览图（代理） |
 | `/api/ai-library/avatar` | GET | GitHub 头像（代理） |
 | `/api/ai-library/compat` | GET | 包与当前 DSH 的兼容性（`?name=`） |
-| `/api/ai-library/paper` | GET | 论文检索（`?q=&source=&limit=`） |
+| `/api/ai-library/paper` | GET | 论文检索（`?q=&source=&limit=`）；`mode=semantic` 走 Sciverse 语义检索返回 `hits[]`（需 `paperKeys.sciverse`） |
+| `/api/ai-library/paper/read` | GET | 读 Sciverse 原文切片（`?doc=&offset=&limit=`，offset 按 Unicode 码点） |
 | `/api/ai-library/keys` | GET / POST | 多平台 key 配置 |
 | `/api/ai-library/translate` | GET / POST | PDFMathTranslate 代理 |
 
