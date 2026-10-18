@@ -50,7 +50,7 @@ if (!CI) console.log('profile : ' + PROFILE_DIR);
 
 /* ── 1. 关键文件 ── */
 section('1. 关键文件');
-for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'package.json', 'cordis.patch.yml']) {
+for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'lib/plugin-record.js', 'package.json', 'cordis.patch.yml']) {
   check(f, existsSync(join(PLUGIN_DIR, f)));
 }
 
@@ -248,6 +248,24 @@ section('6b. 数据根 / Origin 校验');
   } catch (e) {
     check('损坏库冒烟', false, String(e.message).split('\n')[0].slice(0, 140));
   }
+}
+
+/* ── 6c. 安装记录（纯函数）── */
+section('6c. 插件安装记录');
+try {
+  const mod = await import('file://' + join(PLUGIN_DIR, 'lib', 'plugin-record.js').replace(/\\/g, '/') + '?pf=' + Date.now());
+  const entry = mod.buildPluginEntry({ name: 'dsh-fake', stdout: '+ dsh-fake@1.2.3', stderr: '', today: '2026-01-01' });
+  check('生成条目（kind=plugin）', entry.kind === 'plugin');
+  check('解析版本号', entry.version === '1.2.3', entry.version);
+  check('安装命令含包名', String(entry.install).includes('dsh-fake'));
+  const store = { items: [], groups: {} };
+  mod.mergePluginEntry(store, entry);
+  const again = mod.buildPluginEntry({ name: 'dsh-fake', stdout: '+ dsh-fake@1.2.4', today: '2026-01-02' });
+  mod.mergePluginEntry(store, again);
+  check('重复安装不堆条目', store.items.length === 1, '实际 ' + store.items.length);
+  check('版本被更新', store.items[0].version === '1.2.4', store.items[0].version);
+} catch (e) {
+  check('安装记录纯函数', false, String(e.message).slice(0, 140));
 }
 
 /* ── 7. 打包清单 ── */
