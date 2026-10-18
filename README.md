@@ -11,6 +11,13 @@
 
 ---
 
+## 大肥鱼会替你做这些
+
+- **像妈妈一样的大肥鱼**：你把东西弄得到处都是，它会把东西收好 —— 本机产物自动入库、自动分类、随时能搜。
+- **要搜好用的插件？** 大肥鱼自己去[插件市场](https://api.dshmk.com/)翻，卡片上直接写清 star、版本、兼不兼容。
+- **要写漂亮的前端组件？** 把 [react-bits](https://github.com/DavidHDev/react-bits) 这类仓库丢进来建库，大肥鱼就在馆藏里搜现成组件来做页面 UI —— 不用从零抄。
+- **要搜真实存在的论文？** 大肥鱼自己调十个源的 API（arXiv / OpenAlex / Crossref / DOAJ / Europe PMC / INSPIRE / Zenodo / HAL / DataCite / OpenAIRE），带 DOI 和 PDF 链接，不会编文献。
+
 ## 安装
 
 三种方式，选一种（装完**重启 DSH**）：
