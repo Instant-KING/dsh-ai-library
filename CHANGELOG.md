@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.3.27 — 2026-10-18
+
+### 修复
+
+- **「一键安装」点击无反应**：`installPlugin()` 定义在组件**外**，却调用了组件内的 `askConfirm/notify`
+  → 抛 `ReferenceError` 被 async 吞掉。新增模块级对话框桥 `DLG` + `uiConfirm/uiNotify`，
+  组件挂载时把自己的实现注册进去；`installPlugin`、`Preview` 里的 `openLocalFile` 都改用它。
+
 ## 0.3.26 — 2026-10-18
 
 ### 修复（功能缺陷 7 条）
