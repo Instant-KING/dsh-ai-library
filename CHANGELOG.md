@@ -1,5 +1,23 @@
 # 更新日志
 
+## 0.3.26 — 2026-10-18
+
+### 修复（功能缺陷 7 条）
+
+1. **Office 没装 LibreOffice → 500**：改为降级——ENOENT 时直接回原始文件（`Content-Disposition: attachment`），
+   面板显示「用系统程序打开 / 下载」；新增 `env.office` 供前端判断，不再把错误塞进 iframe。
+2. **论文检索缺 key 报「没有检索到」**：`library_paper_search` 返回值带上 `errors`，render 优先提示
+   「需要配置 key 才能查这些源」；命中时也会附 warnings。
+3. **`limit` 语义**：合并后按总数 `slice(0, n)`，与 README 一致。
+4. **`/translate` 状态码**：缺 `src` → 400（原来 403「非法文件路径」）；找不到 PDF → 404；工具文案改中文。
+5. **`/motion` 未配置**：403 → 404 且说明「未配置 motionDir，该功能未启用」。
+6. **`/file?name=` 空参**：403 → 400「缺少 name 参数」。
+7. **`library_repo_build` 相对路径**：字符串截断改 `path.relative()`，root 用 `resolve()` 归一化，不再截掉文件名前缀。
+
+### 新增
+
+- `POST /api/ai-library/open`：用系统默认程序打开本地文件（馆藏本来就是本机文件，比下载合理）。
+
 ## 0.3.25 — 2026-10-18
 
 ### 新增

@@ -342,7 +342,7 @@ Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 
 **5. Office 预览依赖本机 LibreOffice**
 
-首次转 PDF 约 2 秒，之后命中缓存几十毫秒。没装 LibreOffice 时该功能静默降级为下载。
+首次转 PDF 约 2 秒，之后命中缓存几十毫秒。没装 LibreOffice 时**不返回错误**：面板显示「用系统程序打开 / 下载」，接口直接回原始文件（附件）。
 
 **6. 内嵌网页可能被对方拒绝**
 
