@@ -1,5 +1,22 @@
 # 更新日志
 
+## 0.3.35 — 2026-10-18
+
+### 修复
+
+- **「更新」按钮报「未找到 dsh CLI：命令为空」**：`deriveDshCli()` 只按 `process.execPath` 推安装目录，
+  而桌面版的 execPath 不在安装根下，候选全落空。改为多来源解析（按可靠性排序）：
+  1. `DSH_CLI` 环境变量
+  2. `process.resourcesPath` + `runtime/cli/bin/dsh.cmd`（Electron 打包环境最稳）
+  3. `process.argv` 里以 `runtime\bin` 结尾的项，反推 `../cli/bin/dsh.cmd`
+  4. execPath 推安装目录（老路子保留）
+  5. `%LOCALAPPDATA%\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd`
+  6. `~/.local/bin/dsh.cmd` · 7. PATH 里的 `dsh`
+- 找不到时不再抛「命令为空」，改为可操作提示（指向 `DSH_CLI`）
+- `/update` 的 npm 分支改 `add dsh-ai-library@latest`（原来不带 @latest，`^0.3.x` 已满足时 pnpm 不会升级）
+- `env.dshCli` 暴露解析结果，方便诊断
+- 实测（模拟 Electron：`resourcesPath` + argv `runtime\bin`）：解析到真实 `dsh.cmd` 且文件存在
+
 ## 0.3.34 — 2026-10-18
 
 ### 变更：插件市场换数据源
