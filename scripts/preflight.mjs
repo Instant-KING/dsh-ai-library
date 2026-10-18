@@ -50,7 +50,7 @@ if (!CI) console.log('profile : ' + PROFILE_DIR);
 
 /* ── 1. 关键文件 ── */
 section('1. 关键文件');
-for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'lib/plugin-record.js', 'lib/prompt.js', 'package.json', 'cordis.patch.yml']) {
+for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'lib/plugin-record.js', 'lib/prompt.js', 'lib/anysearch.js', 'package.json', 'cordis.patch.yml']) {
   check(f, existsSync(join(PLUGIN_DIR, f)));
 }
 
@@ -134,7 +134,7 @@ try {
   host.apply(ctx);
   check('apply 无异常', true);
   check('路由注册', routes.length >= 15, routes.length + ' 条');
-  check('工具注册', tools.size >= 14, tools.size + ' 个');
+  check('工具注册', tools.size >= 15, tools.size + ' 个');
   let contract = 0;
   for (const [, t] of tools) {
     if (t.output && t.output.schema && typeof t.output.render === 'function' && t.parameters) contract += 1;

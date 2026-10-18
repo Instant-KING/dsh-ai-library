@@ -162,7 +162,8 @@ window.LIBRARY = {
 | `library_import` | 写入 | 把目录里的产物（pptx/docx/pdf/md/png/mp4…）批量入馆 |
 | `library_autocapture` | 写入 | 增量入库：只收上次扫描后新增/变化的文件 |
 | `library_repo_build` | 写入 | 从仓库建库：clone GitHub 或扫本地目录，README + docs 建条目 |
-| `library_paper_search` | 检索 | 十源论文检索（内置实现，无需 Python） |
+| `library_paper_search` | 检索 | 十源论文检索 + Sciverse（需 key），内置实现，无需 Python |
+| `library_web_search` | 检索 | AnySearch 网页检索（匿名可用），找页面/PDF 落地页 |
 | `library_paper_add` | 写入 | 把检索结果存成 `kind: paper` 条目 |
 | `library_translate` | 长任务 | 提交 PDF 给 PDFMathTranslate，立刻返回 jobId |
 | `library_job` | 长任务 | 查任务进度 / 产物 |

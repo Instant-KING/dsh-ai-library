@@ -1,5 +1,17 @@
 # 更新日志
 
+## 0.3.12 — 2026-10-18
+
+### 新增数据源
+
+- **Sciverse（MetaSearch）**：`POST https://api.sciverse.space/meta-search`，Bearer token（`SCIVERSE_API_TOKEN`）
+  - 论文面板新增「Sciverse」按钮；key 在「配置 key」里填 `sciverse`
+  - 返回 structured metadata（unique_id / doc_id / doi / venue / year / abstract）
+- **AnySearch**：`POST https://api.anysearch.com/v1/search`，**匿名可用**（有免费配额，填 key 配额更高）
+  - 新增工具 `library_web_search`：返回 title / url / snippet，用于找页面或 PDF 落地页后再 `library_save_url`
+  - 可选 key 写在 `paperKeys.anysearch`
+- 工具数 14 → **15**（`library_web_search`）
+
 ## 0.3.11 — 2026-10-18
 
 ### 布局调整（窄屏三段）

@@ -24,8 +24,11 @@
   "paperKeys": {
     "ieee": "",
     "elsevier": "",
-    "springer": ""
+    "springer": "",
+    "sciverse": "",
+    "anysearch": ""
   },
   "_paperNote": "论文检索已内置（lib/paper.js），无需 Python；只需在 paperKeys 里填三个平台的 key",
-  "_rootNote": "数据根目录。默认 <用户下载目录>/ai-library；支持 ~ 展开；所有其它路径都从它推出。"
+  "_rootNote": "数据根目录。默认 <用户下载目录>/ai-library；支持 ~ 展开；所有其它路径都从它推出。",
+  "_keysNote": "sciverse 需要从 https://sciverse.space 申请 token；anysearch 可留空（匿名配额），填了配额更高"
 }
