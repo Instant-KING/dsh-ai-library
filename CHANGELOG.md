@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.34 — 2026-10-18
+
+### 变更：插件市场换数据源
+
+- 新增 `lib/market-index.js`：解析 dshmarket / awesome-dsh-plugin 的 `index.json`（format 1）
+- 市场源按顺序回退：`dshmarket.com` → `awesome-dsh-plugin.com` → 旧 `api.dshmk.com`
+- 条目数量 **321 → 2953**（本次保留前 1200 条，默认上限从 300 提到 1200）
+- 条目质量提升：带真实版本号、中文分类（开发与运行时 / UI 增强 / 记忆…）、正确的 `dsh plugin --profile desktop add <pkg>` 安装命令
+- 缓存格式探测：`plugins[]`（新）与 `repositories[]`（旧）都认，坏数据自动换下一个源
+
 ## 0.3.33 — 2026-10-18
 
 ### 新增：对外开放服务 `ctx.aiLibrary`
