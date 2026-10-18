@@ -166,6 +166,7 @@ window.LIBRARY = {
 | `/item` | POST/PATCH/DELETE | 条目增改删 |
 | `/bucket` | POST/PATCH/DELETE | 大类增改删 |
 | `/install` | POST | 一键安装插件（`dsh plugin add`） |
+| `/update` | POST | 自更新：本地 git 目录 `pull`，npm 安装则重装最新版 |
 | `/repo` | GET | GitHub 仓库元信息 |
 | `/compat` | GET | 包与当前 DSH 的兼容性 |
 | `/og` | GET | GitHub 社交预览图（代理） |

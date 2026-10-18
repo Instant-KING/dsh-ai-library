@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.2 — 2026-10-18
+
+### 新增
+
+- 面板工具栏「更新」按钮 + `POST /api/ai-library/update`
+  - 本地目录安装（有 `.git`）→ `git pull --ff-only`，返回前后 commit 与是否变化
+  - npm 安装 → 重装 `dsh-ai-library` 取最新版
+  - 有更新时提示重启 DSH 生效
+- `deriveDshCli()`：不再写死某台机器的 CLI 路径（环境变量 → 安装目录推断 → PATH）
+
 ## 0.3.1 — 2026-10-18
 
 ### 本次修复（两个真问题）
