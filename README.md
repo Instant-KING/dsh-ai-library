@@ -189,7 +189,7 @@ window.LIBRARY = {
 
 | 工具 | 类型 | 作用 |
 |---|---|---|
-| `library_search` | 只读 | 搜条目。`meta` 搜标题/摘要/标签/备注；`fulltext` 深入文件内容（md/代码/PDF），返回命中片段；支持 `group` 限定 |
+| `library_search` | 只读 | 搜条目。`meta` 搜标题/摘要/标签/备注；`fulltext` 深入文件内容（md/代码/PDF），返回命中片段；支持 `group` / `project` / `format` 限定（缩小范围省 token） |
 | `library_get` | 只读 | 取一条的完整信息 + 文件是否存在 |
 | `library_read` | 只读 | 抽文本：md/txt 直读，PDF 用自带 pdf.js（可按页） |
 | `library_stats` | 只读 | 按类型/分组统计、有文件数、文本缓存状态 |
