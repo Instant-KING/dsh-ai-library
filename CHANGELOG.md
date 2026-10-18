@@ -1,5 +1,16 @@
 # 更新日志
 
+## 0.3.13 — 2026-10-18
+
+### 新增
+
+- **Sciverse 语义检索（RAG）**：`POST /agentic-search`，返回原文 chunk
+  - 论文弹层新增模式切换：「元数据检索」/「语义检索 (RAG)」（后者需要 sciverse key，未配置会提示）
+  - 结果按 chunk 展示：标题 + 相似度 + 页码 + 片段正文；可「加入资源库」或「读原文」
+- 新增 `lib/sciverse.js`：`sciverseMeta` / `sciverseSemantic` / `sciverseReadContent`
+- 新路由 `GET /api/ai-library/paper/read?doc=&offset=&limit=`：读 Sciverse 原文切片（Unicode 码点偏移）
+- preflight：关键文件加 `lib/sciverse.js`，路由下限 18
+
 ## 0.3.12 — 2026-10-18
 
 ### 新增数据源

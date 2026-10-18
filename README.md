@@ -187,7 +187,8 @@ window.LIBRARY = {
 | `/og` | GET | GitHub 社交预览图（代理） |
 | `/avatar` | GET | GitHub 头像（代理） |
 | `/archive` | GET | 压缩包内容列表 |
-| `/paper` | GET | 论文检索（十源，内置） |
+| `/paper` | GET | 论文检索（十源 + Sciverse；`mode=semantic` 走语义检索） |
+| `/paper/read` | GET | 读 Sciverse 原文切片（`doc` / `offset` / `limit`） |
 | `/keys` | GET/POST | 论文平台 key 配置 |
 | `/translate` | GET/POST | PDFMathTranslate 代理 |
 | `/market` | POST | 同步插件市场 |
