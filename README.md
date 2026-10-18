@@ -7,7 +7,7 @@
 - 自带 pdf.js **4.10.38**，不需要外网 CDN
 - Markdown 现场渲染、Office 文件转 PDF 预览
 - 拖拽卡片改分组、批量打标签、新建/编辑/删除条目
-- 数据全部留在本地，插件本身不联网（除非你开启市场同步）
+- 数据全部留在本地；**除你主动检索 / 手动同步市场外不联网**（论文检索会请求公开 API，AnySearch 匿名请求，见下文 key 配置）
 
 ---
 
@@ -109,6 +109,11 @@ AILIB_ROOT  AILIB_MOTION_DIR  AILIB_WORKSPACE  SOFFICE  PDFMATHTRANSLATE_URL
 ```
 
 > 论文检索已内置（`lib/paper.js`，纯 Node），**不需要 Python**，也不需要外部项目。
+
+
+> 🔐 **密钥说明**：`config.json` 里的 `paperKeys`（Sciverse / IEEE / Elsevier / Springer / AnySearch）
+> 以**明文**保存在插件目录，同名项目通常都是这样。请确保该目录权限不被他人读取；
+> 如果插件装在共享盘或多用户机器上，建议改用环境变量 `SCIVERSE_API_TOKEN` 等方式，或只填需要的 key。
 
 ## 数据格式
 

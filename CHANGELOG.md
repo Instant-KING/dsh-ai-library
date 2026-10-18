@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.15 — 2026-10-18
+
+### 安全 / 文案
+
+- **`/paper`、`/paper/read` 补 Origin/Referer 校验**：之前这两个 GET 没守卫，恶意页面可以用
+  `<img src="http://127.0.0.1:<port>/api/ai-library/paper?q=x">` 刷掉你配置的 Sciverse 配额并转发查询
+  （`<img>` 不带 Origin，但有 Referer，所以两者都查）
+- README：「插件本身不联网」改成「除主动检索 / 手动同步市场外不联网」——新加了论文检索与 AnySearch，原描述自相矛盾
+- README：新增密钥说明（`paperKeys` 以明文存在插件目录，注意目录权限）
+
 ## 0.3.14 — 2026-10-18
 
 ### 文档

@@ -236,6 +236,9 @@ section('6b. 数据根 / Origin 校验');
       check('外部 Origin → /keys 403', r.evilKeys === 403, 'HTTP ' + r.evilKeys);
       check('外部 Origin → /log 403', r.evilLog === 403, 'HTTP ' + r.evilLog);
       check('本机 Origin 放行', r.localItem !== 403, 'HTTP ' + r.localItem);
+      check('外部 Referer → /paper 403', r.evilPaper === 403, 'HTTP ' + r.evilPaper);
+      check('外部 Referer → /paper/read 403', r.evilPaperRead === 403, 'HTTP ' + r.evilPaperRead);
+      check('本机 /paper 放行', r.localPaper !== 403, 'HTTP ' + r.localPaper);
     }
   } catch (e) {
     check('空库冒烟', false, String(e.message).split('\n')[0].slice(0, 140));

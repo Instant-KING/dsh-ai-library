@@ -27,11 +27,11 @@ try {
   const routes = [];
   mod.apply({ effect: (f) => f(), webServer: { register: (x) => (routes.push(x), () => {}) }, tools: { register: () => {} } });
 
-  const call = async (path, method, headers) => {
+  const call = async (path, method, headers, url) => {
     const r = routes.find((x) => x.path === path);
     if (!r) return { status: 0, json: null };
     const res = { body: '', status: 0, writeHead(c) { this.status = c; }, end(b) { if (b) this.body = b.toString(); } };
-    await r.handler({ method, url: path, headers: headers || {} }, res);
+    await r.handler({ method, url: url || path, headers: headers || {} }, res);
     let json = null;
     try { json = JSON.parse(res.body); } catch { /* 非 JSON */ }
     return { status: res.status, json };
@@ -43,6 +43,10 @@ try {
   const evilKeys = await call('/api/ai-library/keys', 'POST', evil);
   const evilLog = await call('/api/ai-library/log', 'POST', evil);
   const localItem = await call('/api/ai-library/item', 'POST', { origin: 'dsh-app://app' });
+  /* /paper 与 /paper/read 也必须挡住外部来源（img 场景只有 Referer） */
+  const evilPaper = await call('/api/ai-library/paper', 'GET', { referer: 'https://evil.example.com/x.html' }, '/api/ai-library/paper?q=x');
+  const evilPaperRead = await call('/api/ai-library/paper/read', 'GET', { referer: 'https://evil.example.com/x.html' }, '/api/ai-library/paper/read?doc=x');
+  const localPaper = await call('/api/ai-library/paper', 'GET', {}, '/api/ai-library/paper?q=physics&limit=1');
 
   console.log(JSON.stringify({
     mode: corrupt ? 'corrupt' : 'empty',
@@ -55,6 +59,9 @@ try {
     evilKeys: evilKeys.status,
     evilLog: evilLog.status,
     localItem: localItem.status,
+    evilPaper: evilPaper.status,
+    evilPaperRead: evilPaperRead.status,
+    localPaper: localPaper.status,
   }));
 } catch (error) {
   console.log(JSON.stringify({ mode: corrupt ? 'corrupt' : 'empty', error: String((error && error.message) || error).slice(0, 200) }));
