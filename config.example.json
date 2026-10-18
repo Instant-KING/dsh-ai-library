@@ -1,6 +1,6 @@
 {
   "_comment": "复制成 config.json 后按需修改；所有字段都可省略，省略即用默认值。",
-  "root": "~/ai-library",
+  "root": "~/Downloads/ai-library",
   "motionDir": "",
   "soffice": "",
   "translateUrl": "http://127.0.0.1:11008",
@@ -26,5 +26,6 @@
     "elsevier": "",
     "springer": ""
   },
-  "_paperNote": "论文检索已内置（lib/paper.js），无需 Python；只需在 paperKeys 里填三个平台的 key"
+  "_paperNote": "论文检索已内置（lib/paper.js），无需 Python；只需在 paperKeys 里填三个平台的 key",
+  "_rootNote": "数据根目录。默认 <用户下载目录>/ai-library；支持 ~ 展开；所有其它路径都从它推出。"
 }

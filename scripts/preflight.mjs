@@ -88,6 +88,12 @@ const allSrc = clientSrc + indexSrc + toolsSrc;
 /* 市场自动同步的 effect 依赖：只写 items.length 时，空库在 phase 变 ready 后不会重跑 */
 check('市场自动同步 effect 依赖含 state.phase', clientSrc.includes('[state.phase, items.length]'));
 
+/* 默认数据根：新装用户应落在 <下载目录>/ai-library，而不是某个固定盘符 */
+{
+  const cfgSrc = existsSync(join(PLUGIN_DIR, 'lib', 'config.js')) ? readFileSync(join(PLUGIN_DIR, 'lib', 'config.js'), 'utf8') : '';
+  check('默认数据根在下载目录', /Downloads['"]?,\s*['"]ai-library/.test(cfgSrc) || cfgSrc.includes("'Downloads'"));
+}
+
 for (const m of ['pet-probe', 'probePetWidget', 'bf-widget']) {
   check('无调试探针 "' + m + '"', !allSrc.includes(m));
 }

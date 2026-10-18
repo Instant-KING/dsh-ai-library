@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.8 — 2026-10-18
+
+### 变更
+
+- **默认数据根改为 `<用户下载目录>/ai-library`**（原来 `~/ai-library`）
+  - 理由：用户天然把产物丢在下载目录，装完不用先教他改路径
+  - 已有 `config.json` / `AILIB_ROOT` 的用户不受影响（优先级不变）
+  - README、`config.example.json` 同步更新；新增 `_rootNote` 说明
+- preflight 增加静态断言：默认根必须落在 Downloads 下
+
 ## 0.3.7 — 2026-10-18
 
 ### 新增

@@ -29,7 +29,7 @@ dsh plugin --profile desktop add github:Instant-KING/dsh-ai-library
 #         name: E:/path/to/dsh-ai-library/lib/index.js
 ```
 
-装完第一次打开面板会自动建空库；把文件丢进 `~/ai-library/items/` 就能看到。
+装完第一次打开面板会自动建空库；把文件丢进 `<下载目录>/ai-library/items/` 就能看到。
 
 ## 配置
 
@@ -37,7 +37,7 @@ dsh plugin --profile desktop add github:Instant-KING/dsh-ai-library
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `root` | `~/ai-library` | 数据根目录，其余路径从它推出 |
+| `root` | `<下载目录>/ai-library` | 数据根目录，其余路径从它推出 |
 | `libraryFile` | `<root>/library.js` | 手写条目 |
 | `projectFile` | `<root>/project-items.js` | 批量导入条目（可选） |
 | `marketFile` | `<root>/market-items.js` | 市场同步产物（可选） |
