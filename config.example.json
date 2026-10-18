@@ -1,0 +1,31 @@
+{
+  "_comment": "复制成 config.json 后按需修改；所有字段都可省略，省略即用默认值。",
+  "root": "~/ai-library",
+  "motionDir": "",
+  "soffice": "",
+  "translateUrl": "http://127.0.0.1:11008",
+  "marketEnabled": false,
+  "marketUrl": "https://api.dshmk.com/",
+  "marketLimit": 300,
+  "libraryFile": "",
+  "projectFile": "",
+  "marketFile": "",
+  "githubFile": "",
+  "userItemsFile": "",
+  "itemsDir": "",
+  "cacheDir": "",
+  "translateCache": "",
+  "marketCache": "",
+  "workspaceDir": "",
+  "watchDirs": [],
+  "autoCaptureOnBoot": false,
+  "autoCaptureDepth": 2,
+  "toolsEnabled": true,
+  "paperPython": "python",
+  "paperServerDir": "",
+  "paperKeys": {
+    "ieee": "",
+    "elsevier": "",
+    "springer": ""
+  }
+}

@@ -1,0 +1,33 @@
+# 依赖 / 构建
+node_modules/
+*.log
+
+# 用户数据（绝不提交）
+config.json
+items/
+.cache/
+*-items.js
+user-items.json
+user-items.json.tmp
+library.js
+
+# 开发草稿
+.verify.mjs
+.boot-check.mjs
+*.bak
+*.bak-*
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 打包产物
+*.tgz
+
+
+# 开发草稿 / 探针（不进仓库）
+.probe-*.mjs
+.blk*.txt
+.asar/
+.asar-read.mjs
+.verify.mjs

@@ -1,0 +1,60 @@
+{
+  "name": "dsh-ai-library",
+  "version": "0.3.0",
+  "description": "资料馆：把本地多源资料库渲染成 DeepSeek Harness 原生面板。内置 11 种预览器（pdf.js / 代码高亮 / 3D / 表格 / 字体 / 压缩包 / 音频…）、论文多平台检索、GitHub 仓库卡与一键安装。",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "library",
+    "knowledge-base",
+    "pdfjs",
+    "paper-search",
+    "code-viewer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Instant-KING/dsh-ai-library.git"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib/**",
+    "vendor/**",
+    "config.example.json",
+    "README.md",
+    "LICENSE",
+    "NOTICE.md",
+    "INTEGRATION.md",
+    "PRODUCT.md",
+    "scripts/paper_bridge.py",
+    "ECOSYSTEM.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "homepage": "https://github.com/Instant-KING/dsh-ai-library#readme",
+  "bugs": {
+    "url": "https://github.com/Instant-KING/dsh-ai-library/issues"
+  },
+  "author": "Instant-KING",
+  "scripts": {
+    "preflight": "node scripts/preflight.mjs",
+    "pack": "npm pack"
+  }
+}
