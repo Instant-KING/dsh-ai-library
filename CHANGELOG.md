@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.3.24 — 2026-10-18
+
+### 修复
+
+- **侧栏图标选中后消失**：`PanelIcon` 在选中态用 `var(--ailib-accent)`，但这个变量定义在 `.ailib-shell` 上，
+  侧栏图标不在它的子树里 → 变量未定义、`stroke` 无效、图标变透明。改为带完整回退链
+  `var(--ailib-accent, var(--dsw-alias-brand-primary, #e6c16f))`。
+
 ## 0.3.23 — 2026-10-18
 
 ### 修复
