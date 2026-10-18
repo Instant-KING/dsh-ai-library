@@ -21,11 +21,10 @@
   "autoCaptureOnBoot": false,
   "autoCaptureDepth": 2,
   "toolsEnabled": true,
-  "paperPython": "python",
-  "paperServerDir": "",
   "paperKeys": {
     "ieee": "",
     "elsevier": "",
     "springer": ""
-  }
+  },
+  "_paperNote": "论文检索已内置（lib/paper.js），无需 Python；只需在 paperKeys 里填三个平台的 key"
 }

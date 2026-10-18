@@ -1,5 +1,19 @@
 # 更新日志
 
+## 0.3.1 — 2026-10-18
+
+### 本次修复（两个真问题）
+
+- **插件市场不再需要手动同步**
+  - 宿主启动后 6 秒自动检查缓存，过期就后台拉一次（失败静默）
+  - 面板首次打开若市场为空，自动触发一次同步并提示进度，用户不用点「同步市场」
+
+- **论文检索不再依赖外部项目**（代码已迁移进插件）
+  - 新增 `lib/paper.js`：纯 Node 实现十个免 key 源（arXiv / OpenAlex / Crossref / DOAJ / OpenAIRE / INSPIRE / Europe PMC / Zenodo / HAL / DataCite）+ 三个需 key 源（IEEE / ScienceDirect / Springer）
+  - `/api/ai-library/paper` 路由与 `library_paper_search` 工具都改用它，**删除了 Python 依赖与 `paperServerDir` 配置**
+  - auto 模式 5 源并发 + 去重，实测 1.5 秒返回 10 条；命中缓存 2 毫秒
+  - 删除 `scripts/paper_bridge.py`（不再被引用）
+
 ## 0.3.0 — 2026-10-18
 
 **预览器从 4 种扩到 11 种，资料馆从「只读面板」变成「可写入的底座」。**

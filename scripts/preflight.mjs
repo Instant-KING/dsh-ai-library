@@ -48,7 +48,7 @@ console.log('profile  : ' + PROFILE_DIR);
 
 /* ── 1. 关键文件 ─────────────────────────────────────── */
 section('1. 关键文件');
-for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'package.json', 'scripts/paper_bridge.py']) {
+for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'package.json', 'lib/paper.js']) {
   check(f, existsSync(join(PLUGIN_DIR, f)));
 }
 
