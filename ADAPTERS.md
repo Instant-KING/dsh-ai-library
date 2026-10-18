@@ -65,6 +65,30 @@ globalThis.__AILIB_ADAPTERS__.register({ id, label, detect, capabilities })
 globalThis.__AILIB_ADAPTERS__.collect()   // 查当前汇总
 ```
 
+## 3.5 客户端服务 `ctx.aiLibrary`
+
+资料馆在 client 半 `provide` 了一个只读服务，别的**客户端插件**可以这样用（参考 dsh-better-sidebar 的 `ctx.betterSidebar`）：
+
+```js
+export const inject = { required: ["slots"], optional: ["aiLibrary"] }
+export function apply(ctx) {
+  if (!ctx.aiLibrary) return            // 没装资料馆就降级
+  ctx.aiLibrary.openItem("some-id")     // 打开条目
+  ctx.aiLibrary.openBucket("market")    // 打开某个大类
+  ctx.aiLibrary.openPack("dafeiyu-001") // 打开表情包图集
+  const env = ctx.aiLibrary.getEnv()    // 数据根 / office / adapters
+}
+```
+
+方法（v1）：`openItem(id)` / `openBucket(bucketId, group?)` / `openPack(packId)` / `getEnv()`。
+
+设计要点：
+
+- 服务只在 **client 半**；宿主侧请走 HTTP 路由（`/api/ai-library/*`）
+- 面板未挂载时调用是空操作，不会抛错（方便别的插件无脑调）
+- 老版本 Cordis 没有 `provide` 时自动跳过，面板照常工作
+- 与 better-sidebar 的合作方式见「6. 后续计划」
+
 ## 4. 数据出口
 
 `GET /api/ai-library` 的响应里带：

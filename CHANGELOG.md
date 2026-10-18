@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.3.33 — 2026-10-18
+
+### 新增：对外开放服务 `ctx.aiLibrary`
+
+- client 半 `ctx.provide("aiLibrary", service)`（照 dsh-better-sidebar 的 `ctx.betterSidebar` 模式）
+- 方法：`openItem(id)` / `openBucket(bucketId, group?)` / `openPack(packId)` / `getEnv()`
+- 面板未挂载时调用是空操作；老 Cordis 无 `provide` 自动跳过，面板不受影响
+- 实测：provide 成功 / 未挂载调用不炸 / 无 provide 环境也不炸
+- `ADAPTERS.md` 增加服务用法与 better-sidebar 对接计划
+
 ## 0.3.32 — 2026-10-18
 
 ### 新增：表情包图集管理（dsh-meme 联动）
