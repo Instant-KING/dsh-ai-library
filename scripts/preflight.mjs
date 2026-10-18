@@ -18,10 +18,10 @@
  *   7. npm pack --dry-run：必含文件在、私有文件不在
  *   8. （仅本地）profile 的 patch.yml 与本插件 insert 一致
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -196,6 +196,31 @@ if (loads[0] && typeof loads[0].factory === 'function') {
   } catch (e) {
     check('factory + apply', false, String(e.message).slice(0, 160));
   }
+}
+
+/* ── 6b. 空数据根 + Origin 校验（调用独立冒烟脚本）── */
+section('6b. 空数据根 / Origin 校验');
+try {
+  const smoke = join(SCRIPT_DIR, 'smoke-empty-root.mjs');
+  const out = execFileSync(process.execPath, [smoke, join(PLUGIN_DIR, 'lib', 'index.js')], {
+    encoding: 'utf8',
+    timeout: 180000,
+    maxBuffer: 16 * 1024 * 1024,
+    env: { ...process.env },
+  });
+  const line = out.trim().split('\n').filter((l) => l.trim().startsWith('{')).pop() || '{}';
+  const r = JSON.parse(line);
+  if (r.error) {
+    check('空数据根冒烟', false, r.error);
+  } else {
+    check('空数据根 GET 不 500', r.getStatus === 200, 'HTTP ' + r.getStatus);
+    check('空数据根返回 ok', r.ok === true);
+    check('自动创建 library.js', r.libraryCreated === true, r.files || '');
+    check('外部 Origin 被拒（403）', r.evilStatus === 403, 'HTTP ' + r.evilStatus);
+    check('本机 Origin 放行', r.localStatus !== 403, 'HTTP ' + r.localStatus);
+  }
+} catch (e) {
+  check('空数据根冒烟', false, String(e.message).split('\n')[0].slice(0, 140));
 }
 
 /* ── 7. 打包清单 ── */

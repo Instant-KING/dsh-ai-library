@@ -1,5 +1,19 @@
 # 更新日志
 
+## 0.3.3 — 2026-10-18
+
+### 修复（第二轮审计）
+
+- **空数据根不再 500**：首次运行自动创建 `root/` + `items/` + `library.js`（README 那句「自动建空库」现在是真的）
+- `library.js` 损坏时退回空库并记录原因，不再让整个面板报错
+- **市场自动同步条件修正**：`if (!items.length) return` → `state.phase === "ready"`（新装空库现在会触发）
+- **`/archive` 改用 `safeTarget()`**：与 `/file` 同一套路径校验，堵住 `items-secret` 这类同前缀目录穿透
+- **写操作与危险路由加 Origin 校验**：`/update`、`/install`、`/item`、`/bucket`、`/translate`、`/market` 拒绝外部网页来源（403）
+- **配置层**：`root` 支持 `~` 展开；`config.json` 去 BOM 且解析失败不再静默；`watchDirs` 重复定义合并
+- 清理：`paperServerDir` 死代码、`paper_bridge.py` 旧注释、`shell: true`、写死的 `--profile desktop`（改读 `DSH_PROFILE`）
+- `apply()` 失败时输出到 `console.error` 并尝试 `ctx.logger`，不再只写 trace 文件
+- preflight 新增 6b：空数据根冒烟（200 / 自动建库 / Origin 403），脚本 `scripts/smoke-empty-root.mjs`
+
 ## 0.3.2 — 2026-10-18
 
 ### 新增
