@@ -1,20 +1,26 @@
 #!/usr/bin/env node
 /**
- * 空数据根冒烟：用一个全新的空目录当 AILIB_ROOT，验证
- *   1. GET /api/ai-library 不 500
- *   2. 自动创建 library.js
- *   3. 外部 Origin 被 403 拒绝，本机 Origin 放行
+ * 数据根冒烟（两种模式）：
+ *   正常模式：空目录当 AILIB_ROOT → 自动建库 / GET 200 / Origin 守卫
+ *   --corrupt：写一个坏掉的 library.js → 应降级为空库 200，且 env.libraryError 有内容
  *
- * 用法：node scripts/smoke-empty-root.mjs [插件 lib/index.js 路径]
+ * 用法：node scripts/smoke-empty-root.mjs [lib/index.js 路径] [--corrupt]
  * 输出：一行 JSON
  */
-import { mkdtempSync, readdirSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const indexPath = process.argv[2] || new URL('../lib/index.js', import.meta.url).href;
-const root = mkdtempSync(join(tmpdir(), 'ailib-empty-'));
+const args = process.argv.slice(2);
+const corrupt = args.includes('--corrupt');
+const indexPath = args.find((a) => !a.startsWith('--')) || new URL('../lib/index.js', import.meta.url).href;
+const root = mkdtempSync(join(tmpdir(), 'ailib-smoke-'));
 process.env.AILIB_ROOT = root;
+
+if (corrupt) {
+  /* 故意写坏：没有 window.LIBRARY.items */
+  writeFileSync(join(root, 'library.js'), 'window.LIBRARY = { broken: true };', 'utf8');
+}
 
 try {
   const mod = await import('file://' + String(indexPath).replace(/\\/g, '/').replace(/^file:\/\//, '') + '?smoke=' + Date.now());
@@ -31,20 +37,27 @@ try {
     return { status: res.status, json };
   };
 
+  const evil = { origin: 'https://evil.example.com' };
   const g = await call('/api/ai-library', 'GET');
-  const evil = await call('/api/ai-library/item', 'POST', { origin: 'https://evil.example.com' });
-  const local = await call('/api/ai-library/item', 'POST', { origin: 'dsh-app://app' });
+  const evilItem = await call('/api/ai-library/item', 'POST', evil);
+  const evilKeys = await call('/api/ai-library/keys', 'POST', evil);
+  const evilLog = await call('/api/ai-library/log', 'POST', evil);
+  const localItem = await call('/api/ai-library/item', 'POST', { origin: 'dsh-app://app' });
 
   console.log(JSON.stringify({
+    mode: corrupt ? 'corrupt' : 'empty',
     getStatus: g.status,
     ok: !!(g.json && g.json.ok),
     libraryCreated: existsSync(join(root, 'library.js')),
     files: readdirSync(root).join(','),
-    evilStatus: evil.status,
-    localStatus: local.status,
+    libraryError: (g.json && g.json.env && g.json.env.libraryError) || '',
+    evilItem: evilItem.status,
+    evilKeys: evilKeys.status,
+    evilLog: evilLog.status,
+    localItem: localItem.status,
   }));
 } catch (error) {
-  console.log(JSON.stringify({ error: String((error && error.message) || error).slice(0, 200) }));
+  console.log(JSON.stringify({ mode: corrupt ? 'corrupt' : 'empty', error: String((error && error.message) || error).slice(0, 200) }));
   process.exitCode = 1;
 } finally {
   rmSync(root, { recursive: true, force: true });

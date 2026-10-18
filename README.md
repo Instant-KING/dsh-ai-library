@@ -63,7 +63,7 @@ dsh plugin --profile desktop add github:Instant-KING/dsh-ai-library
 | `marketTtlMs` | 6 小时 | 市场缓存有效期 |
 | `paperKeys` | `{}` | `{ ieee, elsevier, springer }`，论文检索用 |
 
-环境变量（优先级高于 config.json）：
+所有路径字段都支持 `~`（会展开成用户主目录）。环境变量（优先级高于 config.json）：
 
 ```
 AILIB_ROOT  AILIB_MOTION_DIR  AILIB_WORKSPACE  SOFFICE  PDFMATHTRANSLATE_URL

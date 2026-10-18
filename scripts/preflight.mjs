@@ -85,6 +85,9 @@ const clientSrc = existsSync(join(PLUGIN_DIR, 'lib/client.js')) ? readFileSync(j
 const indexSrc = existsSync(join(PLUGIN_DIR, 'lib/index.js')) ? readFileSync(join(PLUGIN_DIR, 'lib/index.js'), 'utf8') : '';
 const toolsSrc = existsSync(join(PLUGIN_DIR, 'lib/tools.js')) ? readFileSync(join(PLUGIN_DIR, 'lib/tools.js'), 'utf8') : '';
 const allSrc = clientSrc + indexSrc + toolsSrc;
+/* 市场自动同步的 effect 依赖：只写 items.length 时，空库在 phase 变 ready 后不会重跑 */
+check('市场自动同步 effect 依赖含 state.phase', clientSrc.includes('[state.phase, items.length]'));
+
 for (const m of ['pet-probe', 'probePetWidget', 'bf-widget']) {
   check('无调试探针 "' + m + '"', !allSrc.includes(m));
 }
@@ -198,29 +201,53 @@ if (loads[0] && typeof loads[0].factory === 'function') {
   }
 }
 
-/* ── 6b. 空数据根 + Origin 校验（调用独立冒烟脚本）── */
-section('6b. 空数据根 / Origin 校验');
-try {
+/* ── 6b. 数据根冒烟（空库 + 损坏库）+ Origin 守卫 ── */
+section('6b. 数据根 / Origin 校验');
+{
   const smoke = join(SCRIPT_DIR, 'smoke-empty-root.mjs');
-  const out = execFileSync(process.execPath, [smoke, join(PLUGIN_DIR, 'lib', 'index.js')], {
-    encoding: 'utf8',
-    timeout: 180000,
-    maxBuffer: 16 * 1024 * 1024,
-    env: { ...process.env },
-  });
-  const line = out.trim().split('\n').filter((l) => l.trim().startsWith('{')).pop() || '{}';
-  const r = JSON.parse(line);
-  if (r.error) {
-    check('空数据根冒烟', false, r.error);
-  } else {
-    check('空数据根 GET 不 500', r.getStatus === 200, 'HTTP ' + r.getStatus);
-    check('空数据根返回 ok', r.ok === true);
-    check('自动创建 library.js', r.libraryCreated === true, r.files || '');
-    check('外部 Origin 被拒（403）', r.evilStatus === 403, 'HTTP ' + r.evilStatus);
-    check('本机 Origin 放行', r.localStatus !== 403, 'HTTP ' + r.localStatus);
+  const indexPath = join(PLUGIN_DIR, 'lib', 'index.js');
+  const run = (extra) => {
+    const out = execFileSync(process.execPath, [smoke, indexPath, ...(extra || [])], {
+      encoding: 'utf8',
+      timeout: 180000,
+      maxBuffer: 16 * 1024 * 1024,
+      env: { ...process.env },
+    });
+    const line = out.trim().split('\n').filter((l) => l.trim().startsWith('{')).pop() || '{}';
+    return JSON.parse(line);
+  };
+
+  /* ① 空库 */
+  try {
+    const r = run([]);
+    if (r.error) {
+      check('空库冒烟', false, r.error);
+    } else {
+      check('空库 GET 不 500', r.getStatus === 200, 'HTTP ' + r.getStatus);
+      check('空库返回 ok', r.ok === true);
+      check('自动创建 library.js', r.libraryCreated === true, r.files || '');
+      check('外部 Origin → /item 403', r.evilItem === 403, 'HTTP ' + r.evilItem);
+      check('外部 Origin → /keys 403', r.evilKeys === 403, 'HTTP ' + r.evilKeys);
+      check('外部 Origin → /log 403', r.evilLog === 403, 'HTTP ' + r.evilLog);
+      check('本机 Origin 放行', r.localItem !== 403, 'HTTP ' + r.localItem);
+    }
+  } catch (e) {
+    check('空库冒烟', false, String(e.message).split('\n')[0].slice(0, 140));
   }
-} catch (e) {
-  check('空数据根冒烟', false, String(e.message).split('\n')[0].slice(0, 140));
+
+  /* ② 损坏的 library.js 应降级为空库而不是 500 */
+  try {
+    const r = run(['--corrupt']);
+    if (r.error) {
+      check('损坏库冒烟', false, r.error);
+    } else {
+      check('损坏库 GET 仍 200', r.getStatus === 200, 'HTTP ' + r.getStatus);
+      check('损坏库返回 ok', r.ok === true);
+      check('损坏库带出 libraryError', !!r.libraryError, String(r.libraryError).slice(0, 60));
+    }
+  } catch (e) {
+    check('损坏库冒烟', false, String(e.message).split('\n')[0].slice(0, 140));
+  }
 }
 
 /* ── 7. 打包清单 ── */

@@ -1,5 +1,14 @@
 # 更新日志
 
+## 0.3.4 — 2026-10-18
+
+### 第三轮审计
+
+- **市场自动同步的 effect 依赖补全**：`[items.length]` → `[state.phase, items.length]`。之前空库在 phase 变 ready 时 items.length 仍是 0，依赖没变导致 effect 不重跑，新装用户依然不会自动同步。
+- **`/keys`、`/log` 补 Origin 校验**：两个会写盘的接口也不再接受外部网页来源。
+- **`~` 展开覆盖所有路径字段**：`libraryFile`、`itemsDir`、`cacheDir`、`motionDir`、`workspaceDir`、`watchDirs` 等，不再只有 `root`。
+- **`library.js` 读取错误可见**：`/api/ai-library` 的 `env` 带上 `libraryError` / `configError`，面板顶部直接提示，不再只存进 `globalThis`。
+
 ## 0.3.3 — 2026-10-18
 
 ### 修复（第二轮审计）
