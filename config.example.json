@@ -1,6 +1,8 @@
 {
   "_comment": "复制成 config.json 后按需修改；所有字段都可省略，省略即用默认值。",
   "root": "~/Downloads/ai-library",
+  "accent": "",
+  "_accentNote": "主色覆盖（hex，如 \"#4176E6\" = DSH 品牌蓝）。留空 = 跟随 DSH 主题变量，再退回默认金色；极光背景同步。",
   "motionDir": "",
   "soffice": "",
   "translateUrl": "http://127.0.0.1:11008",

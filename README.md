@@ -115,6 +115,25 @@ AILIB_ROOT  AILIB_MOTION_DIR  AILIB_WORKSPACE  SOFFICE  PDFMATHTRANSLATE_URL
 > 以**明文**保存在插件目录，同名项目通常都是这样。请确保该目录权限不被他人读取；
 > 如果插件装在共享盘或多用户机器上，建议改用环境变量 `SCIVERSE_API_TOKEN` 等方式，或只填需要的 key。
 
+### 主色（主题）
+
+面板的主色（高亮、选中态、极光背景）来自 CSS 变量 `--ailib-accent`，解析顺序：
+
+```
+config.json 的 accent（或环境变量 AILIB_ACCENT）
+  ↓ 没填
+DSH 主题变量 --dsw-alias-brand-primary / --dsw-static-deepseek-500（DSH 若暴露了就用它）
+  ↓ 都没有
+插件默认金色 #e6c16f（视觉与旧版完全一致）
+```
+
+想让插件跟 DSH 品牌色一致，在 `config.json` 里写：
+
+```json
+{ "accent": "#4176E6" }
+```
+
+按钮尺寸、圆角、动效都不变，只换主色；极光背景的主色也会跟着变。
 ## 数据格式
 
 `library.js` 是普通 JS：
