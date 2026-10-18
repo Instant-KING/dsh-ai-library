@@ -1,5 +1,18 @@
 # 更新日志
 
+## 0.3.7 — 2026-10-18
+
+### 新增
+
+- **系统提示词片段**：装载后通过 `ctx.inject(['systemPrompt'], …)` 注册 `ai-library` section（order 160）
+  - 明确要求：本机新建/修改的文件在回话前入库，不要让用户自己找
+  - 分场景给出入库方式：`library_import` / `library_autocapture` / `library_repo_build` / `library_save_url` / `library_paper_add`
+  - 要求先 `library_search` 查重；提醒不要把密钥等私密内容写进库
+  - 文本是函数：数据根 / `toolsEnabled` 变化后下一个请求立即生效
+  - 用 `ctx.inject` 而非顶层 `inject`，服务缺失时不会让插件停在 pending
+- 新增 `lib/prompt.js`（`buildLibraryPromptText` / `registerLibraryPrompt`，可单测）
+- preflight 新增 6d：提示词片段注册与内容断言
+
 ## 0.3.6 — 2026-10-18
 
 ### 新增

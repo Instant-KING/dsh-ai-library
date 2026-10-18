@@ -132,6 +132,13 @@ window.LIBRARY = {
 
 ---
 
+## 系统提示词
+
+装载后本插件会往宿主注册一个 `ai-library` 提示词片段（`ctx.inject(['systemPrompt'], …)`，order 160），
+告诉 AI：**本机新建/修改的文件要在回话前入库**，并给出各场景该用哪个工具（`library_import` / `library_autocapture` / `library_repo_build` / `library_save_url` / `library_paper_add`），以及先 `library_search` 查重、不要把密钥写进库。
+
+片段文本是函数，数据根变化后下一个请求立即生效；服务不存在时不会影响插件加载。
+
 ## 给 AI 的工具
 
 资料馆把这些能力**注册成工具**，AI 可以直接调用（不用翻文件）。共 14 个：

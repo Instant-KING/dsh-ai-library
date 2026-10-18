@@ -50,7 +50,7 @@ if (!CI) console.log('profile : ' + PROFILE_DIR);
 
 /* ── 1. 关键文件 ── */
 section('1. 关键文件');
-for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'lib/plugin-record.js', 'package.json', 'cordis.patch.yml']) {
+for (const f of ['lib/index.js', 'lib/client.js', 'lib/tools.js', 'lib/config.js', 'lib/paper.js', 'lib/plugin-record.js', 'lib/prompt.js', 'package.json', 'cordis.patch.yml']) {
   check(f, existsSync(join(PLUGIN_DIR, f)));
 }
 
@@ -266,6 +266,28 @@ try {
   check('版本被更新', store.items[0].version === '1.2.4', store.items[0].version);
 } catch (e) {
   check('安装记录纯函数', false, String(e.message).slice(0, 140));
+}
+
+/* ── 6d. 系统提示词片段 ── */
+section('6d. 系统提示词片段');
+try {
+  const mod = await import('file://' + join(PLUGIN_DIR, 'lib', 'prompt.js').replace(/\\/g, '/') + '?pf=' + Date.now());
+  let captured = null;
+  const fake = {
+    inject(deps, cb) {
+      cb({ get: () => ({ section: (sec) => { captured = sec; } }) });
+    },
+  };
+  const registered = mod.registerLibraryPrompt(fake, { root: '/tmp/示例库' });
+  check('注册返回 true', registered === true);
+  check('注册了 section', !!(captured && captured.name === 'ai-library'), captured ? captured.name : '(无)');
+  const text = captured ? captured.text() : '';
+  for (const kw of ['library_import', 'library_autocapture', 'library_search', '入库']) {
+    check('提示词含 ' + kw, text.includes(kw));
+  }
+  check('service 缺失时不抛错', mod.registerLibraryPrompt({ inject: (d, cb) => cb({ get: () => null }) }, {}) === true);
+} catch (e) {
+  check('系统提示词片段', false, String(e.message).slice(0, 140));
 }
 
 /* ── 7. 打包清单 ── */
