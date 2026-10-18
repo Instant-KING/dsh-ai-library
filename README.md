@@ -134,6 +134,7 @@ DSH 主题变量 --dsw-alias-brand-primary / --dsw-static-deepseek-500（DSH 若
 ```
 
 按钮尺寸、圆角、动效都不变，只换主色；极光背景的主色也会跟着变。
+
 ## 数据格式
 
 `library.js` 是普通 JS：
