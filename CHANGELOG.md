@@ -64,6 +64,22 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.46 — 2026-10-20
+
+### 新增：插件拓展里的两个资源支持「一键替换 / 打开」
+
+- **人设**：卡片新增 ⚡ 按钮 → `POST /api/dsh-persona-dafeiyu/mutate {action:"set-current", id}`，
+  直接切到该人设（接口返回 `{ok,value}`，已实测 200）；条目新增 `persona.{id,builtin,current}` 字段。
+- **鲸鱼图集**：该插件没有切换接口，改为 📂「打开目录」→ `POST /api/ai-library/open`，
+  把图片丢进 `~/.dsh/whale-roles` / `whale-bubble-imgs` 就能被挂件用到；条目新增 `dir` 字段。
+- `/open` 路由支持目录（原来只认文件，`isFile()` 判断去掉），Windows 交给资源管理器。
+- `EDITABLE_FIELDS` 白名单补 `persona` / `dir`。
+
+### 实测
+
+- 同步：personas updated 4（persona 字段：大肥鱼 current=true，阿茶/听澜 builtin，拉弥亚 用户导入）· whale updated 1（dir 有值）
+- 人设接口：`POST /api/dsh-persona-dafeiyu/mutate` → HTTP 200 `{ok:true, value:…}`
+
 ## 0.3.45 — 2026-10-20
 
 ### 修正：表情包图集是「并进去」，不是新建一张卡片
