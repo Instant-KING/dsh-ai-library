@@ -64,6 +64,23 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.44 — 2026-10-20
+
+### 修复 / 合并
+
+- **内置人设补全**：`dsh-persona-dafeiyu` 的 大肥鱼 / 阿茶 / 听澜 是硬编码在宿主源码里的（`BUILTIN_PERSONAS` + `BUNDLED_*`），
+  不在 `personas.json` 里，之前只同步到用户导入的「拉弥亚」。新增 `extractBuiltinPersonas()` 解析源码，现在 4 条人设都在库里，`大肥鱼` 带「当前启用」标签。
+- **表情包图集并入插件拓展**：删掉左侧独立的「表情包图集」大类，图集作为 `插件拓展 → 表情包 · dsh-meme → 图集 → 具体图集`；
+  卡片上新增 ⚡ 按钮（`POST /api/ai-library/meme?action=enable`）保留一键切换能力，条目新增 `meme.{id,enabled,count}` 字段。
+- **角色包暂时下架**：`dsh-bigfish` 的 `bigfish-classic` 并不是「大肥鱼监工」（包内无素材，examples 里是别的角色，预览成了机器人），
+  先停止登记并删掉该条目，等确认监工对应哪个插件再接。
+- 封面策略收紧：只在包自带 `pet-maker/starter` 里找缩略图，不再拿 `examples/` 顶替。
+
+### 实测
+
+- 同步：personas created 3 / updated 1（大肥鱼·阿茶·听澜 + 拉弥亚）· memePacks created 2 · whalePack 1
+- 渲染（展开后）：插件拓展 / 人设·dsh-persona-dafeiyu / 表情包·dsh-meme / 鲸鱼图集·dsh-whale-widget / 大肥鱼 / 阿茶 / 听澜 / 拉弥亚 / 鲸鱼娘表情包 全部 ✅
+
 ## 0.3.43 — 2026-10-20
 
 ### 重构：插件资源统一进「插件拓展」大类（三级）
