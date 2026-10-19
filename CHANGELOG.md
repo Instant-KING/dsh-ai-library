@@ -64,6 +64,26 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.41 — 2026-10-20
+
+### 改进：插件同步变成「自动跟随」
+
+- 抽出 `syncPluginResources()`，启动首同步、`POST /plugins-sync`、**打开表情包图集列表**三处共用
+  → 在 dsh-meme 的「发现」里装了新图集，下次面板拉图集列表就会自动登记进「图集档案」
+- 新增 `pruneSyncedEntries()`：源插件里已卸载的图集 / 已删除的人设 → 标记 `archived` 并写备注（不删条目，保留历史）
+- 安全护栏：图集列表为空 / 读不到插件目录时**绝不裁剪**（`authoritative` 要求目录存在且列表非空）
+
+### 修复
+
+- `listPacks()` 不传 `dshHome` 会抛 `path` undefined；工具与同步都补上（用 `DSH_HOME` 或 `~/.dsh`）
+- **「未启用」被误标成「已归档」**：`status` 现在固定 `available`，启用状态只体现在 tags / notes 与 summary，
+  `archived` 只表示「源插件里已经不存在」
+
+### 实测
+
+- 幽灵图集：`dryRun pruned.memePacks = 1`，真同步后标记 archived 并加备注
+- 恢复：`大肥鱼` / `拉弥亚` 现在都是 `available`，重复同步 `created 0 / updated 1`（幂等）
+
 ## 0.3.40 — 2026-10-20
 
 ### 新增：插件资源同步（插件内容 → 资料馆条目）
