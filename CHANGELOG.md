@@ -64,6 +64,31 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.43 — 2026-10-20
+
+### 重构：插件资源统一进「插件拓展」大类（三级）
+
+- 左侧不再有「人设 / 图集档案 / 用量账本 / 角色包」四个平级大类，改成单个 **插件拓展**：
+  `插件拓展 → 插件（人设·dsh-persona-dafeiyu / 角色包·dsh-bigfish / 鲸鱼图集·dsh-whale-widget…）→ 资源组 → 条目`
+- `matchSelection` 支持键 `ext:<插件id>[::<资源组>][::<条目id>]`
+
+### 删除
+
+- 用量账本同步（`syncUsage`）连同 3 条旧条目与 `items/usage/` 一起删掉——记账小鲸鱼是 whale-widget，不是 cost-meter 账本
+- 「图集档案」（`kind=meme-pack`）整块移除；表情包的一键切换仍在「表情包图集」
+
+### 新增 / 修复
+
+- `syncWhale()`：鲸鱼挂件图集 —— 内置 assets（角色图 / 气泡 gif / 音效）+ 用户导入目录 `~/.dsh/whale-roles`、`whale-bubble-imgs`、`whale-audio`，每条带封面
+- 角色包封面：manifest 的 assets 在 npm 包里缺失，改为按 `starter/thumbnail.png` → `examples/*.png` 顺序找，**优先 8 KB 缩略图**（原来复制了 2.2 MB 示例图）
+
+### 实测
+
+- 清理：删 3 条（大肥鱼图集 / 2026-09 用量 / 2026-10 用量），条目 399 → 396
+- 同步：personas updated 1 · pets updated 1 · whale created 1
+- 预览：`pets/bigfish-classic-cover.png` 8 KB ✅ · `whale/whale-builtin-cover.png` 250 KB ✅ · `personas/*.md` ✅
+- 渲染：展开后 插件拓展 / 人设·dsh-persona-dafeiyu / 角色包·dsh-bigfish / 鲸鱼图集·dsh-whale-widget / 拉弥亚 / bigfish-classic / 鲸鱼内置图集 全部出现
+
 ## 0.3.42 — 2026-10-20
 
 ### 新增：记账小鲸鱼 / 大肥鱼监工 同步
