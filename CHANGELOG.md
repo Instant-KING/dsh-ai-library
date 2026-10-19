@@ -18,6 +18,77 @@
   `resolve(undefined)` 直接抛错。现在先看 profile 依赖 + `dsh.profile.bundles`，
   没有再回退到 insert 行检查。
 
+### 新增
+
+- **接入 DeepSeek 官方联网工具两个接口：`/v1/tools/search` 与 `/v1/tools/fetch`**
+  新增 `lib/dsweb.js`（客户端 + 磁盘缓存 + markdown 反转义）。key 按
+  `config.json 的 webKeys.deepseek` → `环境变量 DEEPSEEK_API_KEY` → `~/.dsh/.credentials.yaml` 顺序解析，
+  桌面版登录后无需额外配置。
+
+  - `library_web_search` 新增 `provider`：`auto`（默认，有 key 走 DeepSeek）/ `deepseek` / `anysearch`。
+    DeepSeek 结果带 `authority`（权威度）、`date`（发布日期）、`rerank_score`，比匿名检索更能挑出可靠页面。
+    DeepSeek 失败时 `auto` 会退回 AnySearch，不让检索整体不可用。
+  - `library_save_url` 新增 `via`：`auto` / `deepseek` / `builtin` / `external`，以及 `refresh`（绕过缓存）。
+    官方 Fetch 拿到的正文落 `<cacheDir>/web/<sha1>.json`，**默认 24 小时**；同 URL 二次入库不再发请求
+    （实测 156ms → 21ms）。`via=deepseek` 遇到抓不了的站点会明确报错并给替代方案，
+    `via=auto` 则自动降级到内置抓取。
+  - 新增工具 `library_web_cache`（`stats` / `clear`）：看缓存页数与占用、清空缓存。
+
+- **`library_save_url` 支持接收外部已抽取的正文（`markdown` 参数），与 DSH `read_page` / `web_fetch` 联动**
+  内置抓取是裸 HTTP（`fetch()` + 正则剥标签），有两个短板：① 不执行 JS，SPA / 框架文档站只能拿到骨架；
+  ② 只删得掉 `<script>…</script>` 块，写在属性或模板里的 JS 会漏进正文 ——
+  实测抓 Docker 文档，快照里出现了 `document.firstElementChild.className = e.matches ? 'dark' : 'light';`
+  这类片段。
+  现在传 `markdown` 就**跳过自带抓取**，直接存外部抽取结果（DSH `read_page` 走 Firecrawl，跑 JS、
+  输出干净 markdown、代码块完整）。同时新增 `title` / `summary` 覆盖参数。
+  不传 `markdown`、不指定 `via` 时，行为与旧版最终一致（走到 builtin）。
+
+### 修复
+
+- **内置抓取遇到对方断连会直接抛异常，把整个工具调用带崩**
+  `fetch()` 在对方 ECONNRESET / TLS 失败 / DNS 失败时是**抛异常**而不是返回非 2xx，
+  而兜底分支没 try/catch。实测抓 docs.docker.com 落 builtin 时抛 `TypeError: fetch failed`
+  （`ECONNRESET`）。现在统一转成 `{ ok:false, message, hint }` 的可读结果。
+
+- **搜索结果标题里带 HTML 标签**
+  部分结果指向裸 `.md` / `.rst` 文件，`title` 是页面里的一行 `<h2 id="f96eee…">`，
+  直接显示就是一堆标签。现在统一剥标签、解实体、折叠空白；仍为空时退化成「域名/文件名」。
+
+### 文档
+
+- README 新增「联网：DeepSeek 官方 Search / Fetch + DSH 工具」一节：配 key 的三种来源、
+  存网页的三条路（`markdown` / `via=deepseek` / 内置）、缓存策略与实测耗时、
+  两个已知坑（正文是转义过的 markdown；部分站点抓不了）、检索侧的选型对照。
+- README 工具表更新到 16 个（新增 `library_web_cache`），修正联网说明。
+- `config.example.json` 增加 `webKeys.deepseek` 与说明。
+- 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
+- CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
+
+## 0.3.36 — 2026-10-19
+
+### 新增：DeepSeek 官方检索/抓取接入资料馆
+
+- 新增 `lib/dsweb.js`：`/v1/tools/search` 与 `/v1/tools/fetch` 封装
+  - `count`(1-50) / `need_content` / `ori_question` / `localization` 全部支持，搜索语法原样透传
+  - 返回 `rerank_score` / `authority` / `date` / `site_name` / `summary` / `content`，派生出 `quality`(≥1.5) 与 `authoritative`(≥3)
+  - fetch 的 markdown 会**反转义**（`\.`→`.`、`#`→`#`）；24h 磁盘缓存；`failed to fetch URL` 标记 `notFetchable` 供降级
+  - key 解析链：`config.webKeys.deepseek` → `DEEPSEEK_API_KEY` → `~/.dsh/.credentials.yaml`
+- `library_web_search` 加 `provider: auto|deepseek|anysearch`（auto 有 key 走 DeepSeek，失败自动退回 AnySearch）+ `count/needContent/oriQuestion`
+- `library_save_url` 加 `via: auto|deepseek|builtin|external`（external > deepseek > builtin）
+- **新增 `library_web_collect`**：搜索结果直接变成资料馆条目
+  - `kind=website`，`web` 元数据带 site/date/score/authority/query/fetchedAt
+  - `notes` 写站点、发布时间、相关度、权威分、检索词、抓取方式
+  - `needBody=true` 时用 DeepSeek Fetch 抓正文，落 `items/snapshots/web-<hash>.md`
+  - 按 URL 去重；支持 `minScore` / `minAuthority` 过滤与 `dryRun` 预览
+- 新增 `library_web_cache`：查看/清理网页缓存
+- 工具数 15 → **17**
+
+### 实测
+
+- search：`count=5` 真的返回 5 条（另一窗口测到「固定 10 条」是因为用了 `limit`，官方只认 `count`）
+- fetch：21 685 字符，二次调用命中缓存（age=0s）
+- collect：3 条网页入库，带正文快照，`library_search` 能检索到
+
 ## 0.3.35 — 2026-10-18
 
 ### 修复

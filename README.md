@@ -7,7 +7,7 @@
 - 自带 pdf.js **4.10.38**，不需要外网 CDN
 - Markdown 现场渲染、Office 文件转 PDF 预览
 - 拖拽卡片改分组、批量打标签、新建/编辑/删除条目
-- 数据全部留在本地；**除你主动检索 / 手动同步市场外不联网**（论文检索会请求公开 API，AnySearch 匿名请求，见下文 key 配置）
+- 数据全部留在本地；**除你主动检索 / 手动同步市场 / 存网页快照外不联网**（论文检索请求公开 API，AnySearch 匿名请求，见下文 key 配置；网页正文可交给 DSH 的 `read_page` 抽取，此时本插件自身不发请求）
 
 ---
 
@@ -214,7 +214,7 @@ window.LIBRARY = {
 
 ## 给 AI 的工具
 
-资料馆把这些能力**注册成工具**，AI 可以直接调用（不用翻文件）。共 14 个：
+资料馆把这些能力**注册成工具**，AI 可以直接调用（不用翻文件）。共 16 个：
 
 | 工具 | 类型 | 作用 |
 |---|---|---|
@@ -224,15 +224,95 @@ window.LIBRARY = {
 | `library_stats` | 只读 | 按类型/分组统计、有文件数、文本缓存状态 |
 | `library_add` | 写入 | 新建条目（只写 `user-items.json`） |
 | `library_update` | 写入 | 改字段（手写条目也能改，存为覆盖副本） |
-| `library_save_url` | 写入 | 抓网页 → 存本地 md 快照 → 建条目 |
+| `library_save_url` | 写入 | 存网页为条目。三条抓取路：`markdown` 参数（外部抽取，最优）/ DeepSeek 官方 Fetch（干净 markdown + 24h 缓存）/ 内置裸 HTTP（兜底）。见下节 |
 | `library_import` | 写入 | 把目录里的产物（pptx/docx/pdf/md/png/mp4…）批量入馆 |
 | `library_autocapture` | 写入 | 增量入库：只收上次扫描后新增/变化的文件 |
 | `library_repo_build` | 写入 | 从仓库建库：clone GitHub 或扫本地目录，README + docs 建条目 |
 | `library_paper_search` | 检索 | 十源论文检索 + Sciverse（需 key），内置实现，无需 Python |
-| `library_web_search` | 检索 | AnySearch 网页检索（匿名可用），找页面/PDF 落地页 |
+| `library_web_search` | 检索 | 网页检索。`provider=auto`（默认）有 DeepSeek key 就走**官方 Search**（带权威度/发布日期、重排），否则 AnySearch；也可显式指定 |
+| `library_web_cache` | 维护 | 看 / 清 DeepSeek Fetch 的磁盘缓存（`stats` / `clear`） |
 | `library_paper_add` | 写入 | 把检索结果存成 `kind: paper` 条目 |
 | `library_translate` | 长任务 | 提交 PDF 给 PDFMathTranslate，立刻返回 jobId |
 | `library_job` | 长任务 | 查任务进度 / 产物 |
+
+---
+
+## 联网：DeepSeek 官方 Search / Fetch + DSH 工具
+
+资料馆自己**不做浏览器**，联网能力来自两处，按质量分工：
+
+| 来源 | 能做什么 | 特点 |
+|---|---|---|
+| **DeepSeek 官方接口**（本插件内置） | `/v1/tools/search` 检索、`/v1/tools/fetch` 抓单页 | 原始 JSON API，Bearer 鉴权；结果**带权威度与发布日期**、经重排；正文是干净 markdown |
+| **DSH 内置工具** | `read_page` / `web_fetch` 抓正文、`web_search` 检索 | 由 DSH 提供，质量好，但和「入库」是两回事 |
+
+分工一句话：**谁抓得好就用谁抓，资料馆负责存得住、找得到、下次不用再抓。**
+
+### 配 key（一次就好）
+
+优先级从高到低，命中一个即可：
+
+1. `config.json` → `webKeys.deepseek`
+2. 环境变量 `DEEPSEEK_API_KEY`
+3. `~/.dsh/.credentials.yaml` 里的 `DEEPSEEK_API_KEY`（**DSH 桌面版登录后自动就有**，多数情况什么都不用配）
+
+没配 key 时不报错，自动退回 AnySearch 检索 + 内置抓取。
+
+### 存网页的三条路（`library_save_url`）
+
+```text
+① 传 markdown    ← 最优：用 DSH read_page 抽好正文再交过来
+② via="deepseek" ← 官方 Fetch：拿干净 markdown，落 24 小时磁盘缓存
+③ 内置裸 HTTP    ← 兜底：fetch() + 正则剥标签
+```
+
+`via` 默认 `auto`，按 `①→②→③` 自动挑第一个可用的；也可以显式指定。
+
+```js
+// ① 外部抽取（质量最高）
+const page = await read_page({ url })
+await library_save_url({ url, markdown: page.content, title: page.title })
+
+// ② 官方 Fetch（一次调用，自动缓存）
+await library_save_url({ url, via: 'deepseek', group: '参考网站' })
+
+// ③ 只要兜底
+await library_save_url({ url, via: 'builtin' })
+```
+
+返回体里的 `mode` 会告诉你走了哪条：`external` / `deepseek` / `builtin`，
+`cacheHit` 表示是否命中缓存，快照头部也会写 `- 方式：…`，事后可追溯。
+
+### 为什么要「提高缓存」
+
+官方 Fetch **对同一 URL 的返回是稳定的**（实测连抓两次内容字节级相同），所以按 URL 缓存既安全又划算：
+
+- 缓存在 `<cacheDir>/web/<sha1>.json`，默认 **24 小时**；
+- 同页第二次入库**不再发请求**（实测 156ms → 21ms）；
+- `refresh: true` 可强制刷新；
+- `library_web_cache` 可看占用/清空（`stats` / `clear`）。
+
+### 两个已知的坑（都已在代码里处理）
+
+1. **正文是「转义过的 markdown」**。返回的 `content` 里标题是 `\# 标题`、句点是 `Node\.js`、
+   括号是 `\(`，直接存盘渲染出来是一堆反斜杠。插件会自动反转义（`unescapeMd`）。
+2. **有些站点抓不了**。`docs.docker.com`、`zh.wikipedia.org` 实测返回
+   404 `failed to fetch URL`。此时 `via="auto"` 会**自动降级**到内置抓取；
+   `via="deepseek"` 会明确报错并给提示（改用 `read_page` + `markdown` 参数）。
+
+> 附：DSH 的 `web_fetch` 在某些版本会报
+> `multiple usable web providers are registered (deepseek-fetch-api, http)`——
+> 那是 DSH 侧两个 fetch 提供者共存导致的，与资料馆无关。改用 `read_page` 即可。
+
+### 检索侧怎么选
+
+| 场景 | 用哪个 |
+|---|---|
+| 要权威度、发布日期、结果已重排 | `library_web_search(provider="deepseek")` |
+| 不想花自己的 API 额度 | `library_web_search(provider="anysearch")`（匿名也有配额） |
+| 让插件自己挑 | `library_web_search()`（默认 `auto`） |
+| 只是要个答案、结果不用入库 | DSH 的 `web_search` |
+| 批量把链接收进库 | `library_web_search` 挑链接 → 逐个 `library_save_url(via="deepseek")` |
 
 ## 路由
 

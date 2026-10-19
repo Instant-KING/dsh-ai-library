@@ -30,6 +30,10 @@
     "springer": "",
     "anysearch": ""
   },
+  "webKeys": {
+    "deepseek": ""
+  },
+  "_webNote": "联网工具（DeepSeek 官方 Search / Fetch 两个接口）。deepseek 留空时按顺序回退：环境变量 DEEPSEEK_API_KEY → ~/.dsh/.credentials.yaml 里的 DEEPSEEK_API_KEY（DSH 桌面版登录后自动有）。配了它以后 library_web_search 默认走 DeepSeek 搜索（带权威度/日期、结果经重排），library_save_url 默认走 DeepSeek Fetch（拿干净 markdown，并落 24 小时磁盘缓存到 <cacheDir>/web/）。",
   "_paperNote": "论文检索已内置（lib/paper.js），无需 Python；只需在 paperKeys 里填三个平台的 key",
   "_rootNote": "数据根目录。默认 <用户下载目录>/ai-library；支持 ~ 展开；所有其它路径都从它推出。",
   "_keysNote": "论文检索的 key（都可留空）： | sciverse = SCIVERSE_API_TOKEN，去 https://sciverse.space 申请；语义检索(RAG)必须配它 | ieee = https://developer.ieee.org；elsevier = https://dev.elsevier.com；springer = https://dev.springernature.com | anysearch = https://www.anysearch.com/console/api-keys（留空走匿名免费配额）"
