@@ -1,5 +1,23 @@
 # 更新日志
 
+## 未发布
+
+### 修复
+
+- **客户端 bundle 二次求值会把整个面板带崩（`Identifier '__AILIB_ID' has already been declared`）**
+  `lib/client.js` 是经典脚本，顶层 `const __AILIB_ID` 落在全局词法环境里。页面里再求值一次
+  同一个 bundle（插件更新、HMR、加载失败重试都会走到）就抛 SyntaxError —— 而且第 33 行的
+  「防重复注册」守卫在 `const` 之后，根本轮不到执行。
+  现在整个 bundle 包进 IIFE，`__AILIB_ID` 变成函数作用域，二次求值安全。
+- **preflight 的「求值两次不炸」永远测不出上面这个问题**
+  原来用 `new Function(src)` 跑两遍，每次都开独立函数作用域，`const` 不会冲突。
+  改用 `vm.runInThisContext(src)`，与浏览器里「两个 `<script>` 共享同一全局词法环境」一致；
+  已验证旧代码在新测试下必定失败（❌ `Identifier '__AILIB_ID' has already been declared`）。
+- **preflight 第 8 节不认「正规安装」**
+  原先只检查 profile 补丁里的 insert 行；改用 `dsh plugin add` 装成组合包后 `rows[0]` 为空，
+  `resolve(undefined)` 直接抛错。现在先看 profile 依赖 + `dsh.profile.bundles`，
+  没有再回退到 insert 行检查。
+
 ## 0.3.35 — 2026-10-18
 
 ### 修复

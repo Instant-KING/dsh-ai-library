@@ -22,6 +22,7 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir, tmpdir } from 'node:os';
+import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -171,9 +172,11 @@ globalThis.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve
 
 let threw = null;
 try {
-  const run = new Function('window', 'document', 'localStorage', 'fetch', clientSrc);
-  run(globalThis.window, globalThis.document, globalThis.localStorage, globalThis.fetch);
-  run(globalThis.window, globalThis.document, globalThis.localStorage, globalThis.fetch);
+  /* 必须用 vm.runInThisContext 模拟浏览器：两个 <script> 共享同一个全局词法环境，
+     const/let 重复声明会直接抛 SyntaxError。
+     new Function() 每次都开独立函数作用域，这种错误永远测不出来（旧版就是这么漏的）。 */
+  vm.runInThisContext(clientSrc, { filename: 'client.js' });
+  vm.runInThisContext(clientSrc, { filename: 'client.js' });
 } catch (e) {
   threw = e;
 }
@@ -364,28 +367,46 @@ if (!CI) {
   section('8. 本机 profile');
   const PATCH_YML = join(PROFILE_DIR, 'cordis.patch.yml');
   const PROFILE_PKG = join(PROFILE_DIR, 'package.json');
-  let yml = '';
+  const PLUGIN_ENTRY = join(PLUGIN_DIR, 'lib', 'index.js');
+
+  let prof = null;
   try {
-    yml = readFileSync(PATCH_YML, 'utf8');
-    check('patch.yml 可读', true);
-  } catch (e) {
-    check('patch.yml 可读', false, String(e.message).slice(0, 100));
-  }
-  if (yml) {
-    const rows = [...yml.matchAll(/-\s*id:\s*([^\s]+)[\s\S]*?name:\s*([^\n]+)/g)]
-      .map((m) => ({ id: m[1], name: m[2].trim().replace(/^["']|["']$/g, '') }))
-      .filter((r) => resolve(r.name) === resolve(join(PLUGIN_DIR, 'lib', 'index.js')) || /ai-library/.test(r.id));
-    check('找到本插件 insert', rows.length >= 1, rows.length + ' 条');
-    check('没有重复 insert', rows.length <= 1, '实际 ' + rows.length);
-    const row = rows[0] || {};
-    check('insert 指向本插件', !!pkg && (row.name === pkg.name || resolve(row.name).startsWith(resolve(PLUGIN_DIR))), row.name || '');
-  }
-  try {
-    const p = JSON.parse(readFileSync(PROFILE_PKG, 'utf8'));
-    const bundles = (p.dsh && p.dsh.profile && p.dsh.profile.bundles) || [];
-    check('profile package.json 合法', true, bundles.length + ' bundles');
+    prof = JSON.parse(readFileSync(PROFILE_PKG, 'utf8'));
+    const n = ((prof.dsh && prof.dsh.profile && prof.dsh.profile.bundles) || []).length;
+    check('profile package.json 合法', true, n + ' bundles');
   } catch (e) {
     check('profile package.json 合法', false, String(e.message).slice(0, 100));
+  }
+
+  const name = pkg && pkg.name;
+  const dep = prof && prof.dependencies && name ? prof.dependencies[name] : undefined;
+  const bundles = (prof && prof.dsh && prof.dsh.profile && prof.dsh.profile.bundles) || [];
+
+  if (dep !== undefined) {
+    /* 正规安装：dsh plugin add 装成组合包，行由包内 cordis.patch.yml 插，不在用户补丁里 */
+    const selected = bundles.includes(name);
+    check('已作为依赖装进 profile', true, name + '@' + dep);
+    check('已选入 bundles', selected, selected ? name : 'bundles 里缺 ' + name + '（插件页里启用即可）');
+    check('node_modules 里有该包', !!name && existsSync(join(PROFILE_DIR, 'node_modules', name, 'lib', 'index.js')));
+  } else {
+    let yml = '';
+    try {
+      yml = readFileSync(PATCH_YML, 'utf8');
+      check('patch.yml 可读', true);
+    } catch (e) {
+      check('patch.yml 可读', false, String(e.message).slice(0, 100));
+    }
+    if (yml) {
+      const rows = [...yml.matchAll(/-\s*id:\s*([^\s]+)[\s\S]*?name:\s*([^\n]+)/g)]
+        .map((m) => ({ id: m[1], name: m[2].trim().replace(/^["']|["']$/g, '') }))
+        .filter((r) => r.name === name || resolve(r.name) === resolve(PLUGIN_ENTRY) || /ai-library/.test(r.id));
+      check('找到本插件 insert', rows.length >= 1, rows.length + ' 条');
+      check('没有重复 insert', rows.length <= 1, '实际 ' + rows.length);
+      if (rows.length) {
+        const row = rows[0];
+        check('insert 指向本插件', row.name === name || resolve(row.name).startsWith(resolve(PLUGIN_DIR)), row.name || '');
+      }
+    }
   }
 }
 
