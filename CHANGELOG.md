@@ -64,6 +64,21 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.37 — 2026-10-19
+
+### 改进
+
+- **网页卡片视觉**：`kind=website` 的卡片多一行元信息 —— 站点名 / 发布日期 / 权威分（`权 3`，≥3 高亮）/
+  相关度（`2.1`，≥1.5 高亮），数据来自 DeepSeek search 的 `site_name` / `date` / `authority` / `rerank_score`
+- **URL 归一化去重**：`normalizeUrl()` 去 `#片段`、host 小写、去尾部斜杠、清 `utm_*`/`spm`/`ref`/`from` 等追踪参数；
+  去重判断与条目 id 都用归一化后的 URL（展示仍用原始链接）
+
+### 实测
+
+- 归一化：`https://GitHub.com/a/b/?utm_source=x#readme` → `https://github.com/a/b`
+- 去重：同一查询再收一次 → 新建 0 条、跳过 3 条
+- 卡片渲染：站点名 / 日期 / `权 3` / `2.1` 全部出现在卡片上
+
 ## 0.3.36 — 2026-10-19
 
 ### 新增：DeepSeek 官方检索/抓取接入资料馆
