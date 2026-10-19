@@ -64,6 +64,21 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.48 — 2026-10-20
+
+### 打开本地文件 / 目录：换实现 + 加诊断
+
+- Windows 改用 `cmd /d /s /c start "" "<path>"`（`start` 走 shell 关联，和双击等价），
+  `explorer.exe` 只作第二兜底——Electron 宿主里直接 spawn explorer 常常「进程起了但不弹窗」。
+- 每次尝试写 `.cache/open.log`：`OK/FAIL/THROW [cmd-start|explorer] <路径> [错误]`，点了没反应可以直接看日志定位。
+- 预览右上角按钮改成：**本地文件 📂（用系统程序打开，传绝对路径）/ 远程 ↗（新窗口）**，
+  本地路径由 `env.root + files[0]` 拼出。
+
+### 已知情况
+
+- 旧版宿主（0.3.47 之前）`/open` 只认 `items/` 相对路径，绝对路径一律 404 —— 这是「点了没反应」的根因。
+- 新路由实测：目录 / 文件都返回 200；`cmd start` 在独立 node 进程里发起无报错。
+
 ## 0.3.47 — 2026-10-20
 
 ### 修复：/open 打不开（按钮点了没反应）
