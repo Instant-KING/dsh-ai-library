@@ -64,6 +64,24 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.49 — 2026-10-20
+
+### 修复：打开本地文件（三个坑一起修）
+
+1. **路径拼错**：`files[]` 是相对 `items/` 的，预览按钮却拼成 `root + rel`（少了 `items/`），
+   于是 404「找不到该路径：E:\ai-library\artifacts\…」。现在改为把 `rel` 原样发给宿主。
+2. **库里文件名和磁盘不一致**：条目写 `对话-华师模板逆向-生图配图`，磁盘上是 `对话-华师模板逆向_生图配图`（连字符 vs 下划线）。
+   `/open` 支持 `rel` 后：先按原路径找，找不到再**按 basename 在 items 下递归找**（深度 4）。
+   实测：错的那条 rel 也能打开 → `items\artifacts\对话-华师模板逆向_生图配图\huashi1-template-demo.pptx`。
+3. **explorer 在 Electron 里不弹窗**：实测对比（用 COM 统计资源管理器窗口数）——
+   `spawn explorer.exe /n,<path>` → 窗口 +1 ✅；`cmd /c start` 从 Node spawn 反而不弹。
+   打开顺序改为 `explorer /n` → `explorer` → `cmd start`，并继续写 `.cache/open.log`。
+
+### 其他
+
+- 补 `readdirSync` 导入（模糊查找要用，之前缺导入会让兜底静默失效）。
+- 预览右上按钮：本地文件 **📂**（发 `{rel}`）、远程 **↗**（新窗口）。
+
 ## 0.3.48 — 2026-10-20
 
 ### 打开本地文件 / 目录：换实现 + 加诊断
