@@ -64,6 +64,23 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.42 — 2026-10-20
+
+### 新增：记账小鲸鱼 / 大肥鱼监工 同步
+
+- `syncUsage()`：读 `~/.dsh/storages/cost-meter/ledger.json`（23 天账本，字段含 input/output/cacheRead/calls/costCny/byProviderModel），
+  每月生成一条 `kind=usage` 条目 + `items/usage/<YYYY-MM>.md` 明细表；读不到 cost-meter 时退回 `~/.dsh/.dshw-usage.json`
+- `syncCompanionPacks()`：读 `dsh-bigfish/packs/*/manifest.json`（内置角色包）与 `~/.dsh/pets/dsh-bigfish/*.dshpet`（用户自制），
+  生成 `kind=pet` 条目（只登记，不复制素材）
+- 左侧新增「用量账本」「角色包」两个视图；`KIND_LABEL` 补 `usage` / `pet`
+- 同步与裁剪都并入 `syncPluginResources()`，路由与工具返回多 `usage` / `pets` 两块
+
+### 实测
+
+- 用量：2026-09 合计 ¥19.73 / 3.90 亿 tokens / 1422 次；2026-10 合计 ¥86.69 / 19.13 亿 tokens / 5228 次（md 明细已落盘）
+- 角色包：`bigfish-classic` 0.5.2 · 6 场景 · 6 素材
+- 渲染：用量账本 / 角色包 两个视图均可见
+
 ## 0.3.41 — 2026-10-20
 
 ### 改进：插件同步变成「自动跟随」
