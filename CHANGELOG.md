@@ -64,6 +64,24 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.40 — 2026-10-20
+
+### 新增：插件资源同步（插件内容 → 资料馆条目）
+
+- `lib/plugin-sync.js`：检测已装插件（读 profile package.json + node_modules），把人设与图集落成条目
+  - `dsh-persona-dafeiyu` → `kind=persona`，正文写 `items/personas/<id>.md`，备注带 id / 状态 / 字数 / 创建时间
+  - `dsh-meme` 图集 → `kind=meme-pack`，备注带图集 id / 位置 / 张数，提示可在「表情包图集」一键切换
+- 新增路由 `GET/POST /api/ai-library/plugins-sync`（POST 支持 `?dryRun=1`）
+- 新增工具 `library_plugin_sync`（工具数 17 → **18**），幂等：重复跑只更新
+- 启动后 1.5s 静默同步一次（`autoSyncPlugins !== false` 时），失败只打日志不阻塞
+- 左侧新增两个视图：**人设**、**图集档案**（`KIND_LABEL` 加 `persona` / `meme-pack`）
+
+### 实测
+
+- 路由：GET 识别 22 个已装插件；POST 同步 1 条人设 + 1 条图集记录；dryRun 不改库
+- 条目：`persona-拉弥亚`（文件已落盘 `items/personas/custom-mvfi1dzw.md`）、`meme-pack-大肥鱼`（24 张）
+- 渲染：折叠态可见「人设」「图集档案」，卡片显示拉弥亚 / 大肥鱼
+
 ## 0.3.39 — 2026-10-19
 
 ### 修复
