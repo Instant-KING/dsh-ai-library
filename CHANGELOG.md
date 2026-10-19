@@ -64,6 +64,26 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.47 — 2026-10-20
+
+### 修复：/open 打不开（按钮点了没反应）
+
+根因：`/open` 只接受 `name`（相对 `items/` 的路径），用 `safeTarget(name)` 解析；
+面板与鲸鱼按钮传的是**绝对路径** `path`，被解析成 `items/C:/Users/...` → 一律 404「找不到该文件」，
+连「用系统程序打开」也一样打不开。
+
+- `/open` 现在优先认 `path`（绝对路径，文件和目录都行），不存在才退回 `name` 的相对解析；
+  路径不存在时返回 404 并带上解析后的绝对路径方便排查。
+- 客户端 `openWithSystem()` 认绝对路径（`C:\…` / `/…` → 走 `path`，否则走 `name`）。
+- `openLocalFile()`（Office「用系统程序打开」）把 `items/xxx` 拼上 `env.root` 变成绝对路径再请求。
+
+### 实测（进程内直接调 handler）
+
+- 目录 `C:/Users/instant/.dsh/whale-roles` → HTTP 200 `{ok:true, path}`
+- 文件 `E:/ai-plugins/ai-library/README.md` → HTTP 200
+- 不存在路径 → HTTP 404 `找不到该路径：C:\nope\nope`
+- `spawn explorer.exe <dir>` 独立测试无报错（explorer 本来就 exit 1，不算失败）
+
 ## 0.3.46 — 2026-10-20
 
 ### 新增：插件拓展里的两个资源支持「一键替换 / 打开」
