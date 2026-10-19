@@ -64,6 +64,23 @@
 - 系统提示词同步：明确「三条路按质量排序」，让 AI 知道有 `via=deepseek` 这条路，而不只依赖 `read_page`。
 - CHANGELOG 修正早先「不传 markdown 时行为与旧版完全一致」的表述（现在默认会先试 DeepSeek Fetch）。
 
+## 0.3.51 — 2026-10-20
+
+### 新增：兼容插件扫描 → README 自动生成
+
+- `scripts/gen-compat.mjs`：扫 profile 里已装的插件，判定资料馆能读到什么，生成 README 的「兼容的插件」表格
+  - 人设（`dsh-persona-dafeiyu`，内置 3 + 用户导入 1）
+  - 表情包图集（`dsh-meme`，内置 1 + 用户 1）
+  - 鲸鱼图集（`dsh-whale-widget`，6 图 / 9 音效）
+  - 角色包（`dsh-bigfish`，只有 manifest、缺素材 → 标为未登记）
+  - 用量账本（`dsh-cost-meter`，按定位不做管理，只记录可读性）
+- `npm run compat` 重新生成；README 用 `<!-- compat:start/end -->` 标记包住，不手改表格
+
+### 新增：awesome-dsh-plugin 投稿材料
+
+- `contrib/awesome-dsh-plugin/Instant-KING__dsh-ai-library.yml`：按对方 contributing.md 的要求写好的一条 YAML
+- `contrib/awesome-dsh-plugin/README.md`：逐条自检 + 提交命令 + 可能的争议点
+
 ## 0.3.50 — 2026-10-20
 
 ### 人设切换的反馈

@@ -471,3 +471,17 @@ node .boot-check.mjs          # 客户端模块 boot + 面板渲染
 MIT（见 [LICENSE](LICENSE)）。
 
 `vendor/` 下的 pdf.js 是 **Apache-2.0**，字体另有许可，详见 [NOTICE.md](NOTICE.md)。
+
+<!-- compat:start -->
+### 兼容的插件（脚本生成，勿手改）
+
+| 插件 | 联动内容 | 版本 | 本机状态 | 说明 |
+| --- | --- | --- | --- | --- |
+| `dsh-persona-dafeiyu` | 人设 | 0.4.1 | ✅ 内置 3 · 用户导入 1 |  |
+| `dsh-meme` | 表情包图集 | 0.1.52 | ✅ 内置 1 · 用户 1 | 面板里可一键切换 |
+| `dsh-whale-widget` | 鲸鱼图集 | 0.4.2 | ✅ 内置 6 图 / 9 音效 · 用户 0 | 插件没有切换接口，给「打开目录」 |
+| `dsh-bigfish` | 角色包 | 0.6.0 | — manifest 1 · 用户角色 0 | 能读到 manifest，但 npm 包里缺素材图，暂未登记 |
+| `dsh-cost-meter` | 用量账本 | 1.8.35 | — ledger.json 可读 | 按定位不做系统/账本管理，仅记录可读性 |
+
+> 重新生成：`node scripts/gen-compat.mjs --write`
+<!-- compat:end -->
